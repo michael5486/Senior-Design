@@ -15,7 +15,7 @@ while display.isNotDone():
     segmented = dist.stretch(200,255)
  #   segmented.show()
 
-   blobs = segmented.findBlobs()
+    blobs = segmented.findBlobs()
     if blobs:
         circles = blobs.filter([b.isCircle(0.2) for b in blobs])
         if circles:
