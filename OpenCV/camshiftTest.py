@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 import cv2.cv as cv
+import serial
+
+ser = serial.Serial("/dev/tty50",9600)
 
 def is_rect_nonzero(r):
     (_,_,w,h) = r
@@ -60,7 +63,11 @@ class CamShiftDemo:
     def run(self):
         hist = cv.CreateHist([180], cv.CV_HIST_ARRAY, [(0,180)], 1 )
         backproject_mode = False
+        print "hitting run section"
+        x = 0
         while True:
+            #print x
+            #x = x + 1
             frame = cv.QueryFrame( self.capture )
 
             # Convert to HSV and keep the hue
@@ -78,6 +85,21 @@ class CamShiftDemo:
                 crit = ( cv.CV_TERMCRIT_EPS | cv.CV_TERMCRIT_ITER, 10, 1)
                 (iters, (area, value, rect), track_box) = cv.CamShift(backproject, self.track_window, crit)
                 self.track_window = rect
+            try:
+                #prints the center x and y value of the tracked ellipse
+                coord = track_box[0]
+                print "center = {}".format(coord)
+                if (coord[0] < 320):
+                    print "move right"
+                    ser.write("R")
+                elif (coord[0] == 320):
+                    print "do nothing"
+                else:
+                    print "move left"
+                    ser.write("L")
+            except UnboundLocalError:
+                print "track_box is None"
+
 
             # If mouse is pressed, highlight the current selected rectangle
             # and recompute the histogram
@@ -97,6 +119,7 @@ class CamShiftDemo:
                     cv.ConvertScale(hist.bins, hist.bins, 255. / max_val)
             elif self.track_window and is_rect_nonzero(self.track_window):
                 cv.EllipseBox( frame, track_box, cv.CV_RGB(255,0,0), 3, cv.CV_AA, 0 )
+
 
             if not backproject_mode:
                 cv.ShowImage( "CamShiftDemo", frame )
