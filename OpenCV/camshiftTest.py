@@ -3,7 +3,7 @@
 import cv2.cv as cv
 import serial
 
-ser = serial.Serial("/dev/tty50",9600)
+#ser = serial.Serial("/dev/ttyACM0",9600)
 
 def is_rect_nonzero(r):
     (_,_,w,h) = r
@@ -69,6 +69,7 @@ class CamShiftDemo:
             #print x
             #x = x + 1
             frame = cv.QueryFrame( self.capture )
+            cv.Flip(frame, frame, 1)
 
             # Convert to HSV and keep the hue
             hsv = cv.CreateImage(cv.GetSize(frame), 8, 3)
@@ -91,12 +92,12 @@ class CamShiftDemo:
                 print "center = {}".format(coord)
                 if (coord[0] < 320):
                     print "move right"
-                    ser.write("R")
+                   # ser.write("R")
                 elif (coord[0] == 320):
                     print "do nothing"
                 else:
                     print "move left"
-                    ser.write("L")
+                   # ser.write("L")
             except UnboundLocalError:
                 print "track_box is None"
 
