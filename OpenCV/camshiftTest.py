@@ -84,8 +84,10 @@ class CamShiftDemo:
             cv.CalcArrBackProject( [self.hue], backproject, hist )
             if self.track_window and is_rect_nonzero(self.track_window):
                 crit = ( cv.CV_TERMCRIT_EPS | cv.CV_TERMCRIT_ITER, 10, 1)
+                print self.track_window
                 (iters, (area, value, rect), track_box) = cv.CamShift(backproject, self.track_window, crit)
                 self.track_window = rect
+                print self.track_window
             try:
                 #prints the center x and y value of the tracked ellipse
                 coord = track_box[0]
@@ -119,6 +121,7 @@ class CamShiftDemo:
                 if max_val != 0:
                     cv.ConvertScale(hist.bins, hist.bins, 255. / max_val)
             elif self.track_window and is_rect_nonzero(self.track_window):
+                print track_box
                 cv.EllipseBox( frame, track_box, cv.CV_RGB(255,0,0), 3, cv.CV_AA, 0 )
 
 
