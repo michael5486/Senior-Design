@@ -1,0 +1,12 @@
+[
+{
+  "directory": "/home/robot/Desktop/Senior-Design/RealSense",
+  "command": "/usr/bin/c++     -std=c++11 -I/usr/local/include    -o CMakeFiles/cpp-capture-test.dir/cpp-capture-test.cpp.o -c /home/robot/Desktop/Senior-Design/RealSense/cpp-capture-test.cpp",
+  "file": "/home/robot/Desktop/Senior-Design/RealSense/cpp-capture-test.cpp"
+},
+{
+  "directory": "/home/robot/Desktop/Senior-Design/RealSense",
+  "command": "/usr/bin/c++     -std=c++11 -I/usr/local/include    -o CMakeFiles/cpp-test.dir/cpp-test.cpp.o -c /home/robot/Desktop/Senior-Design/RealSense/cpp-test.cpp",
+  "file": "/home/robot/Desktop/Senior-Design/RealSense/cpp-test.cpp"
+}
+]

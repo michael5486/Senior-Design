@@ -1,0 +1,2 @@
+/home/robot/Desktop/Senior-Design/RealSense/CMakeFiles/cpp-capture-test.dir
+/home/robot/Desktop/Senior-Design/RealSense/CMakeFiles/cpp-test.dir

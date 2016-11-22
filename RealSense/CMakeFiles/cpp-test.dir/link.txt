@@ -1,0 +1,1 @@
+/usr/bin/c++    -std=c++11    CMakeFiles/cpp-test.dir/cpp-test.cpp.o  -o cpp-test -rdynamic -lrealsense -lGLU -lGL -lSM -lICE -lX11 -lXext -lm /usr/local/lib/libglfw.so -Wl,-rpath,/usr/local/lib: 

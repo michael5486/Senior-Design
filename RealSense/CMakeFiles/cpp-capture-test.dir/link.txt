@@ -1,0 +1,1 @@
+/usr/bin/c++    -std=c++11    CMakeFiles/cpp-capture-test.dir/cpp-capture-test.cpp.o  -o cpp-capture-test -rdynamic -lrealsense -lGLU -lGL -lSM -lICE -lX11 -lXext -lm /usr/local/lib/libglfw.so -Wl,-rpath,/usr/local/lib: 
