@@ -1,0 +1,9 @@
+﻿  main.cpp
+src\main.cpp(74): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'pxcCHAR *'
+  src\main.cpp(74): note: consider using '%ls' in the format string
+  src\main.cpp(74): note: consider using '%lls' in the format string
+  src\main.cpp(74): note: consider using '%Ls' in the format string
+  src\main.cpp(74): note: consider using '%ws' in the format string
+src\main.cpp(312): warning C4800: 'WPARAM': forcing value to bool 'true' or 'false' (performance warning)
+  RF_PersonTracking_vs2015.vcxproj -> C:\Users\Michael\Documents\Visual Studio 2015\Projects\personTrackingSimplified\bin/Win32/personTrackingSimplified_d.exe
+  RF_PersonTracking_vs2015.vcxproj -> bin/Win32/personTrackingSimplified_d.pdb (Full PDB)
