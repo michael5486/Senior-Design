@@ -1,0 +1,4 @@
+﻿  Streamvid.cpp
+LINK : warning LNK4067: ambiguous entry point; selected 'mainCRTStartup'
+  rstest.vcxproj -> C:\Users\Asus\Desktop\Senior-Design\RealSense\Projects\personTrackingSimplified\sragvi\rstest\Debug\rstest.exe
+  rstest.vcxproj -> C:\Users\Asus\Desktop\Senior-Design\RealSense\Projects\personTrackingSimplified\sragvi\rstest\Debug\rstest.pdb (Partial PDB)
