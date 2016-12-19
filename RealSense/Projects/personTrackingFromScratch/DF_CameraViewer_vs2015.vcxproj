@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>DF_CameraViewer</ProjectName>
+    <ProjectName>personTrackingFromScratch</ProjectName>
     <RootNamespace>DF_CameraViewer</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{9FA5C9AF-4006-4999-A6D7-3AB896083572}</ProjectGuid>
@@ -238,7 +238,7 @@
     <ClInclude Include="..\common\include\util_cmdline.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="camera_viewer.rc" />
+    <ResourceCompile Include="Person_tracking.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
