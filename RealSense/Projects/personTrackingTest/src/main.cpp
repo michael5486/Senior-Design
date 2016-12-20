@@ -144,6 +144,7 @@ int main(int argc, WCHAR* argv[]) {
 			//const PXCCapture::Sample *sample = pp->QuerySample();
 			PXCCapture::Sample *sample = pp->QuerySample();
 			if (sample) {
+				//createBlueSample(sample);
 
 
 				//RenderFrame method format: 

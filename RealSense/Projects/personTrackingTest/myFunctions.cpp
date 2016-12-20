@@ -2,6 +2,9 @@
 #include <util_render.h>
 #include <stdio.h>
 #include <PersonTrackingRenderer.h>
+#include <stdint.h>
+
+PXCCapture::Sample *blueSample = NULL;
 
 HWND getHWND(UtilRender utilrender) {
 
@@ -13,7 +16,42 @@ HWND getHWND(UtilRender utilrender) {
 
 }
 
-void colorBitmapBlue(PXCCapture::Sample* sample) {
+void createBlueSample(PXCCapture::Sample *sample) {
+	//create a new image
+	PXCImage* image = sample->color;
+	PXCImage::ImageData data;
+
+	if (image->AcquireAccess(PXCImage::ACCESS_READ, PXCImage::PIXEL_FORMAT_RGB32, &data) >= PXC_STATUS_NO_ERROR) {
+		const pxcI32 height = image->QueryInfo().height;
+		const pxcI32 width = image->QueryInfo().width;
+
+		for (int i = 0; i < height; i++) {
+			// Get the address of the row of pixels
+			pxcBYTE* p = data.planes[0] + i * data.pitches[0];
+
+			for (int j = 0; j < width; j++) {
+				//might make it blue
+				p[1] = 255;
+				p[2] = 255;
+
+			}
+		}
+		image->ReleaseAccess(&data);
+
+		//if (sample->color && !renderc.RenderFrame(sample->color)) break;
+
+		UtilRender temp(L"temp");
+		temp.RenderFrame(sample->color);
+
+
+	}
+	else {
+		printf("Couldn't convert image...\n");
+	}
+
+}
+
+void colorBitmapBlue(PXCCapture::Sample *sample) {
 
 	printf("trying to color bitmap blue....\n");
 
@@ -28,16 +66,29 @@ void colorBitmapBlue(PXCCapture::Sample* sample) {
 
 		for (int i = 0; i < height; i++) {
 			// Get the address of the row of pixels
-			pxcBYTE* p = data.planes[0] + i * data.pitches[0];
-		
-				for (int j = 0; j < width; j++) {
+			pxcBYTE *p = data.planes[0] + i * data.pitches[0];
+			//uint8_t temp = 255;
+			////printf("%hhu    ", temp);
+			//printf("%u  ", temp);
+
+				for (int j = 0; j < width; j+=3) {
 					//might make it blue
-					p[1] = 255;
-					p[2] = 255;
+					
+					*p = 255;
+					//p[2] = 255;
 					//printf("(%d, %d)", p[1], p[2]);
+					//*p = temp;
+					//printf("%u  ", &p);
+					p++;
+					*p = 0;
+					p++;
+					*p = 0;
+					p++;
 
 			}
+	
 		}
+		printf("\n");
 		image->ReleaseAccess(&data);
 	}
 	else {
