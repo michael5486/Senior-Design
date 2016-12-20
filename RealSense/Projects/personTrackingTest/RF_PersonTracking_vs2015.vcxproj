@@ -231,6 +231,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="myFunctions.h" />
     <ClInclude Include="include\PersonTrackingRendererManager.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="include\PersonTrackingProcessor.h" />
@@ -246,6 +247,7 @@
     <ResourceCompile Include="Person_tracking.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="myFunctions.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\PersonTrackingFrameRateCalculator.cpp" />
     <ClCompile Include="src\PersonTrackingProcessor.cpp" />

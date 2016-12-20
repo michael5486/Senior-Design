@@ -42,6 +42,9 @@
     <ClInclude Include="include\PXCCaptureDeviceExt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="myFunctions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Person_tracking.rc">
@@ -74,6 +77,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ProfileSetMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="myFunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

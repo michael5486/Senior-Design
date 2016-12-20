@@ -11,8 +11,13 @@ public:
 	void DrawBitmap(PXCCapture::Sample* sample);
 	void Reset();
 
-private:
+	//-----------I put these here-----------
 	void DrawGraphics(PXCPersonTrackingData* PersonOutput);
+	//void DrawLocation(PXCPersonTrackingData::PersonTracking* trackedPerson);
+
+private:
+	//original spots
+	//void DrawGraphics(PXCPersonTrackingData* PersonOutput);
 	void DrawLocation(PXCPersonTrackingData::PersonTracking* trackedPerson);
 	void DrawLocation(PXCRectI32 rectangle, int red = 255, int green = 0, int blue = 0);
 	void DrawHeadLocation(PXCPersonTrackingData::PersonTracking* trackedPerson);

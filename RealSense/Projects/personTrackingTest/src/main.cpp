@@ -19,6 +19,7 @@
 #include "PersonTrackingProcessor.h"
 #include "PersonTrackingUtilities.h"
 #include "ProfileSetMap.h"
+#include "myFunctions.h"
 #include "resource.h"
 
 
@@ -28,16 +29,13 @@
 
 PXCSession *session = NULL;
 PersonTrackingRendererManager *renderer = NULL;
+PersonTrackingRenderer2D *renderer2D = NULL;
+
 
 //need this crap so it will compile...comes from extern variables in PersonTrackingProcessor.cpp
 pxcCHAR fileName[1024] = { 0 };
 HANDLE ghMutex;
 volatile bool isStopped = false;
-
-
-
-
-
 
 int main(int argc, WCHAR* argv[]) {
     /* Creates an instance of the PXCSenseManager */
@@ -65,14 +63,25 @@ int main(int argc, WCHAR* argv[]) {
     UtilRender renderc(L"Color"), renderd(L"Depth");
     pxcStatus sts;
 
+	//getHWND(renderc);
+	//getHWND(renderd);
+
 	//-----------creating render windows---------------
 	HWND colorWindow = renderc.m_hWnd;
 	HWND depthWindow = renderc.m_hWnd;
+
+	//printing out the values to each render box's pointer value. Will need in order to draw on it
+	printf("colorWindowPtr: %p\n", renderc.m_hWnd);
+	printf("depthWindowPtr: %p\n", renderd.m_hWnd);
 
 	PersonTrackingRenderer2D *renderer2D = new PersonTrackingRenderer2D(colorWindow);
 	PersonTrackingRenderer3D *renderer3D = new PersonTrackingRenderer3D(colorWindow, session);
 
 	renderer = new PersonTrackingRendererManager(renderer2D, renderer3D);
+
+	renderer->SetRendererType(PersonTrackingRenderer::R2D);
+	renderer->SetSenseManager(pp);
+
 
 
 	//variable to be printed
@@ -131,43 +140,59 @@ int main(int argc, WCHAR* argv[]) {
 			//printf("reaching rendering portion\n");
 
 			/* Render streams*/
-			const PXCCapture::Sample *sample = pp->QuerySample();
+			//this was originally a constant, but does it need to be? I'm going to try it without const
+			//const PXCCapture::Sample *sample = pp->QuerySample();
+			PXCCapture::Sample *sample = pp->QuerySample();
 			if (sample) {
+
+
 				//RenderFrame method format: 
 				//bool RenderFrame(const unsigned char* pBuffer, const int bitCount, const int width, const int height);
 				//            OR
 				//bool RenderFrame(PXCImage *image);   sample->*** is a PXCImage...figure out how to draw onto this PXCImage
-				if (sample->depth && !renderd.RenderFrame(sample->depth)) break;
-				if (sample->color && !renderc.RenderFrame(sample->color)) break;
-			}
 
-		//	printf("beginning person tracking\n");
+				//	printf("beginning person tracking\n");
 
-			PXCPersonTrackingModule* personModule = pp->QueryPersonTacking();
+				PXCPersonTrackingModule* personModule = pp->QueryPersonTacking();
 
-			//if personModule is null, skip this iteration
-			if (personModule == NULL) {
-				//printf("personModule is null\n");
-				pp->ReleaseFrame();
-				continue;
-			}
-			//if more than 1 person in FOV, skip this iteration
-			if (personModule->QueryOutput()->QueryNumberOfPeople() > 1) {
-				wprintf_s(L"Too many people in image. \n");
-				pp->ReleaseFrame();
-				continue;
-			}
+				//if personModule is null, skip this iteration
+				if (personModule == NULL) {
+					//printf("personModule is null\n");
 
-			//if one person in loop
-			if (personModule->QueryOutput()->QueryNumberOfPeople() == 1) {
-				PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
-				assert(personData != NULL);
-				PXCPersonTrackingData::PersonTracking* personTracking = personData->QueryTracking();
-				PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personTracking->QueryCenterMass();
+					//still needs to render and release the frame though
+					if (sample->depth && !renderd.RenderFrame(sample->depth)) break;
+					if (sample->color && !renderc.RenderFrame(sample->color)) break;
+					pp->ReleaseFrame();
+					continue;
+				}
+				//if more than 1 person in FOV, skip this iteration
+				if (personModule->QueryOutput()->QueryNumberOfPeople() > 1) {
+					wprintf_s(L"Too many people in image. \n");
+					pp->ReleaseFrame();
+					continue;
+				}
 
-				//if (p % 30 == 0) {
-				wprintf_s(L"The user's x location: %f \n The user's y location: %f \n The user's z location: %f \n", centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z);
-				//}
+				//if one person in loop
+				if (personModule->QueryOutput()->QueryNumberOfPeople() == 1) {
+					PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
+					assert(personData != NULL);
+					PXCPersonTrackingData::PersonTracking* personTracking = personData->QueryTracking();
+					PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personTracking->QueryCenterMass();
+
+					//void PersonTrackingRenderer::CreateMarking(PXCPersonTrackingModule* personModule, PXCCapture::Sample* sample) {
+					//this method might draw a rectangle around a person
+									//renderer->CreateMarking(personModule, sample);
+									//renderer->CreateMarking(personModule, sample);
+									//renderer->SetOutput(personModule->QueryOutput());
+									//renderer->DrawBitmap(sample);
+									//renderer2D->DrawGraphics(personModule->QueryOutput());
+									//renderer2D->DrawLocation(personTracking);
+					//myDrawLocation(personTracking, renderc);
+					colorBitmapBlue(sample);
+					//if (sample->depth && !renderd.RenderFrame(sample->depth)) break;
+					if (sample->color && !renderc.RenderFrame(sample->color)) break;
+					wprintf_s(L"The user's x location: %f \n The user's y location: %f \n The user's z location: %f \n", centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z);
+				}
 			}
 
 			//printf("loop count: %d\n", count++);
