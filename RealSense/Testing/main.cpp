@@ -7,5 +7,4 @@
 int main() {
 
 	printf("Herro  \n");
-	myPerson test;
 }
