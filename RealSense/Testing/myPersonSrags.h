@@ -25,6 +25,8 @@ class myPerson {
 		void updateJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
 		double calculateDistance(myPoint, myPoint);
 		myPoint calculateMidpoint(myPoint, myPoint);
+		double getTorso() { return torsoHeight; }
+		double getArmLength() { return armLength; }
 		// Center of area calc already part of person tracking module
 
 };
@@ -96,4 +98,14 @@ myPoint myPerson::calculateMidpoint(myPoint point1, myPoint point2) { //order of
 	}
 	myPoint toReturn(finalX, finalY, finalZ);
 	return toReturn;
+}
+
+double compareTorsoRatio(myPerson person1, myPerson person2) { //compares person2 against person1...order matters
+	double ratio1 = person1.getTorso()/person1.getArmLength();
+	double ratio2 = person2.getTorso()/person2.getArmLength();
+
+	//compare the two ratios
+	
+
+
 }
