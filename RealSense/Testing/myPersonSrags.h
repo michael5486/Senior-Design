@@ -24,7 +24,7 @@ class myPerson{
 		void printPerson();
 		void updateJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
 		double calculateDistance(myPoint, myPoint);
-		//myPoint calculateMidpoint(myPoint, myPoint);
+		myPoint calculateMidpoint(myPoint, myPoint);
 		// Center of area calc already part of person tracking module
 
 };
@@ -38,8 +38,10 @@ void myPerson::updateJoints(myPoint newHead, myPoint newSpineMid, myPoint newSho
 	JOINT_HAND_LEFT = newHandRight;
 
 	//shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT);
-	armLength = mean(calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT), calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT));
-	height = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID);
+	double tmp = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT);
+	double tmp2 = calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT));
+	double armLength = (tmp + tmp2) / 2;
+	double height = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID);
 
 }
 

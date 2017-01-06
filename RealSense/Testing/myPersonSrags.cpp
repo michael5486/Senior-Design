@@ -1,4 +1,4 @@
-#include "myPerson.h"
+#include "myPersonSrags.h"
 #include <stdio.h>
 #include <iostream>
 #include <stdlib.h>
