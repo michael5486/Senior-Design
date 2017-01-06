@@ -3,7 +3,7 @@
 
 int personCounter = 0; //global variable, increments for each new person constructed
 
-class myPerson{
+class myPerson {
 	private:
 		int personID;
 		double torsoHeight, armLength;
@@ -18,8 +18,8 @@ class myPerson{
 		myPerson() : JOINT_HEAD(), JOINT_SHOULDER_LEFT(), JOINT_SHOULDER_RIGHT(), JOINT_HAND_LEFT(),
 			JOINT_HAND_RIGHT(), JOINT_SPINE_MID() {
 			personID = personCounter++;
-			//shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT);
-
+			torsoHeight = 0;
+			armLength = 0;
 		}
 		void printPerson();
 		void updateJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
