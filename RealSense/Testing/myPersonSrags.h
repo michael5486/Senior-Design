@@ -6,7 +6,7 @@ int personCounter = 0; //global variable, increments for each new person constru
 class myPerson{
 	private:
 		int personID;
-		double shoulderDistance, height, leftArmLength, rightArmLength;
+		double torsoHeight, armLength;
 		myPoint JOINT_HEAD;
 		myPoint JOINT_SHOULDER_LEFT;
 		myPoint JOINT_SHOULDER_RIGHT;
@@ -35,13 +35,15 @@ void myPerson::updateJoints(myPoint newHead, myPoint newSpineMid, myPoint newSho
 	JOINT_SHOULDER_LEFT = newShoulderLeft;
 	JOINT_SHOULDER_RIGHT = newShoulderRight;
 	JOINT_HAND_LEFT = newHandLeft;
-	JOINT_HAND_LEFT = newHandRight;
+	JOINT_HAND_RIGHT = newHandRight;
 
 	//shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT);
 	double tmp = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT);
-	double tmp2 = calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT));
-	double armLength = (tmp + tmp2) / 2;
-	double height = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID);
+	double tmp2 = calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT);
+	armLength = (tmp + tmp2) / 2;
+	torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID);
+
+
 
 }
 
@@ -55,8 +57,8 @@ void myPerson::printPerson() {
 	printf("    JOINT_HAND_LEFT:      "); JOINT_HAND_LEFT.printPoint();
 	printf("    JOINT_HAND_RIGHT:     "); JOINT_HAND_RIGHT.printPoint();
 	printf("  Calculated Features:\n");
-	printf("    ArmLength:            %.2f\n", shoulderDistance);
-	printf("    UpperBodyHeight:      %.2f\n", height);
+	printf("    ArmLength:            %.2f\n", armLength);
+	printf("    UpperBodyHeight:      %.2f\n", torsoHeight);
 
 
 }
