@@ -1,6 +1,9 @@
 #include "myPoint.h"
 #include <math.h>
 
+#define e 2.718 //mathematical constant
+#define RATIO_EXP_DECAY 2.31 //experimentally generated value
+
 int personCounter = 0; //global variable, increments for each new person constructed
 
 class myPerson {
@@ -100,12 +103,26 @@ myPoint myPerson::calculateMidpoint(myPoint point1, myPoint point2) { //order of
 	return toReturn;
 }
 
-double compareTorsoRatio(myPerson person1, myPerson person2) { //compares person2 against person1...order matters
+double compareTorsoRatio(myPerson person1, myPerson person2) { 
+//compares person2 against person1...order doesn't matter
+//returns value 100 if ratios are identical, with expnentially decreasing values as they get more different
+// y  = 100e^(-2.31*x)
+// x = | ratio1 - ratio 2 |	
 	double ratio1 = person1.getTorso()/person1.getArmLength();
 	double ratio2 = person2.getTorso()/person2.getArmLength();
 
-	//compare the two ratios
-	
+	double x = fabs(ratio1 - ratio2);
 
+	double neg = -1 * RATIO_EXP_DECAY * x;
+
+	double eToPower = pow(e, neg);
+
+	printf("e^power: %f\n", eToPower);
+
+	double y = 100 * eToPower;
+
+	printf("y = %f\n", y);
+
+	return y;
 
 }
