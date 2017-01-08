@@ -35,7 +35,7 @@ int main() {
 	testPerson2.printPerson();
 
 	//they are the same person, should test return 100. it works :)
-	compareTorsoRatio(testPerson, testPerson2);
+	//compareTorsoRatio(testPerson, testPerson2);
 
 	myPerson testPerson3;
 	//testPerson2.printPerson();
@@ -48,6 +48,9 @@ int main() {
 	testPerson3.updateJoints(newHead3, newSpineMid3, newLeftShoulder3, newRightShoulder3, newLeftHand3, newRightHand3);
 	testPerson3.printPerson();
 
-	compareTorsoRatio(testPerson, testPerson3);
+	//compareTorsoRatio(testPerson, testPerson3);
+	//compareTorsoAndArmLengths(testPerson3, testPerson2);
+
+	comparePeople(testPerson, testPerson3);
 
 }

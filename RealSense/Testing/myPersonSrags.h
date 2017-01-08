@@ -3,6 +3,8 @@
 
 #define e 2.718 //mathematical constant
 #define RATIO_EXP_DECAY 2.31 //experimentally generated value
+#define VAL_EXP_DECAY 0.15
+
 
 int personCounter = 0; //global variable, increments for each new person constructed
 
@@ -117,12 +119,65 @@ double compareTorsoRatio(myPerson person1, myPerson person2) {
 
 	double eToPower = pow(e, neg);
 
-	printf("e^power: %f\n", eToPower);
+	//printf("e^power: %f\n", eToPower);
 
 	double y = 100 * eToPower;
 
-	printf("y = %f\n", y);
+	printf("Ratio Similarity = %f\n", y);
 
 	return y;
+}
+
+double compareTorsoAndArmLengths(myPerson person1, myPerson person2) {
+//compares the actual values of torso and arm lengths...order doesn't matter
+//returns value between 0 and 100, 100 being that values are identical	
+double arm1 = person1.getArmLength();
+double arm2 = person2.getArmLength();
+
+double torso1 = person1.getTorso();
+double torso2 = person2.getTorso();
+
+double x1 = fabs(arm1 - arm2);
+double neg = -1 * VAL_EXP_DECAY * x1;
+
+double eToPower = pow(e, neg);
+
+//printf("e^power: %f\n", eToPower);
+
+double y1 = 100 * eToPower;
+
+printf("Arm Similarity = %f\n", y1);
+
+
+double x2 = fabs(torso1 - torso2);
+neg = -1 * VAL_EXP_DECAY * x2;
+eToPower = pow(e, neg);
+//printf("e^power: %f\n", eToPower);
+double y2 = 100 * eToPower;
+
+printf("Torso Similarity = %f\n", y2);
+
+//calculate average of torso and arm scores
+printf("Combined Similarity: %f\n", (y1 + y2)/2);
+
+return (y1 + y2) / 2;
+
+}
+
+double comparePeople(myPerson person1, myPerson person2) {
+//calculates the similarity between two people using all defined methods
+
+//may want to place a greater value on features we determine are more useful	
+
+double num1 = compareTorsoRatio(person1, person2);
+double num2 = compareTorsoAndArmLengths(person1, person2);
+
+//calculating the average between the two for now
+double toReturn = (num1 + num2) / 2;
+
+printf("Final Similarity = %f\n", toReturn);
+
+return toReturn;
+
 
 }
