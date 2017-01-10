@@ -120,6 +120,18 @@ int main(int argc, WCHAR* argv[]) {
 		printf("Color stream size: (%d, %d)\n", sizeColor.width, sizeColor.height);
 		printf("Depth stream size: (%d, %d)\n", sizeDepth.width, sizeDepth.height);
 
+		//Module Configuration
+		PXCPersonTrackingConfiguration* personTrackingConfig = pp->QueryPersonTracking()->QueryConfiguration();
+		//Module will track al angles (frontal and profile)
+		personTrackingConfig->SetTrackedAngles(PXCPersonTrackingConfiguration::TrackingAngles::TRACKING_ANGLES_ALL);
+		//Enabling Joint Tracking
+		PXCPersonTrackingConfiguration::SkeletonJointsConfiguration* skeletonJoints = personTrackingConfig->QuerySkeletonJoints();
+		skeletonJoints->SetMaxTrackedPersons(1);
+		skeletonJoints->SetTrackingArea(PXCPersonTrackingConfiguration::SkeletonJointsConfiguration::SkeletonMode::);
+		skeletonJoints->Enable();
+		printf("is jointTracking Enabled?: %d\n", skeletonJoints->IsEnabled());
+
+
 		/*PXCCapture::Device *device = cm->QueryDevice();
 		PXCCapture::Device::StreamProfileSet profileSet = device->QueryStreamProfileSet();
 
@@ -155,6 +167,9 @@ int main(int argc, WCHAR* argv[]) {
 				//	printf("beginning person tracking\n");
 
 				PXCPersonTrackingModule* personModule = pp->QueryPersonTacking();
+				//PXCPersonTrackingConfiguration* personTrackingConfig = personModule->QueryConfiguration();
+				//PXCPersonTrackingConfiguration::SkeletonJointsConfiguration* skeletonJoints = personTrackingConfig->QuerySkeletonJoints();
+				//skeletonJoints->Enable();
 
 				//if personModule is null, skip this iteration
 				if (personModule == NULL) {
@@ -180,6 +195,13 @@ int main(int argc, WCHAR* argv[]) {
 					PXCPersonTrackingData::PersonTracking* personTracking = personData->QueryTracking();
 					PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personTracking->QueryCenterMass();
 
+					PXCPersonTrackingData::PersonJoints * ptj = personData->QuerySkeletonJoints();
+					int numJoints = ptj->QueryNumJoints();
+					printf("numJoints: %d ", numJoints);
+					printf("is jointTracking Enabled?: %d ", skeletonJoints->IsEnabled());
+					//PXCPersonTrackingData::PersonJoints::SkeletonPoint* jointArray[numJoints];
+					//PXCPersonTrackingData::PersonJoints::
+
 					//void PersonTrackingRenderer::CreateMarking(PXCPersonTrackingModule* personModule, PXCCapture::Sample* sample) {
 					//this method might draw a rectangle around a person
 									//renderer->CreateMarking(personModule, sample);
@@ -189,10 +211,10 @@ int main(int argc, WCHAR* argv[]) {
 									//renderer2D->DrawGraphics(personModule->QueryOutput());
 									//renderer2D->DrawLocation(personTracking);
 					//myDrawLocation(personTracking, renderc);
-					colorBitmapBlue(sample);
+					//colorBitmapBlue(sample);
 					//if (sample->depth && !renderd.RenderFrame(sample->depth)) break;
 					if (sample->color && !renderc.RenderFrame(sample->color)) break;
-					wprintf_s(L"The user's x location: %f \n The user's y location: %f \n The user's z location: %f \n", centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z);
+					wprintf_s(L"Center Mass (%f, %f, %f\n", centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z);
 				}
 			}
 
