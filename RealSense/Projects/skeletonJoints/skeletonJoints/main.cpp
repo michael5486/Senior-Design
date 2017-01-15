@@ -117,11 +117,6 @@ int main(int argc, WCHAR* argv[]) {
 					PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
 					assert(personData != NULL);
 					PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
-					//numJoints = ptj->QueryNumJoints();
-					pxcI32 numPoints = personJoints->QueryNumJoints();
-					int n = numPoints;
-					printf("numJoints: 0x%08x ", n);
-					PXCPersonTrackingData::PersonJoints::SkeletonPoint* jointPoints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[6];
 					// Sragvi Additions
 				//	printf("  Type: %d, confidenceImage:%d\n", jointPoints[0].jointType, jointPoints[0].confidenceImage);
 					if (!joints)
@@ -138,9 +133,7 @@ int main(int argc, WCHAR* argv[]) {
 					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[4].jointType, joints[4].confidenceImage, joints[4].image.x, joints[4].image.y);
 					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[5].jointType, joints[5].confidenceImage, joints[5].image.x, joints[5].image.y);
 					//Sragvi Additions end
-					personJoints->QueryJoints(jointPoints);
-					printf("  Type: %d, confidenceImage:%d x: %f y: %f\n", jointPoints[0].jointType, jointPoints[0].confidenceImage, jointPoints[0].image.x, jointPoints[0].image.y);
-					delete[] jointPoints;
+					delete[] joints;
 				}
 			}
 			/* Releases lock so pipeline can process next frame */
