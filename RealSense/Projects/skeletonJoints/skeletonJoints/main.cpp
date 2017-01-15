@@ -122,7 +122,22 @@ int main(int argc, WCHAR* argv[]) {
 					int n = numPoints;
 					printf("numJoints: 0x%08x ", n);
 					PXCPersonTrackingData::PersonJoints::SkeletonPoint* jointPoints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[6];
+					// Sragvi Additions
 				//	printf("  Type: %d, confidenceImage:%d\n", jointPoints[0].jointType, jointPoints[0].confidenceImage);
+					if (!joints)
+					{
+						joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
+					}
+					personJoints->QueryJoints(joints);
+					//pxcF32
+					printf("-------Joint Set--------\n");
+					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[0].jointType, joints[0].confidenceImage, joints[0].image.x, joints[0].image.y);
+					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[1].jointType, joints[1].confidenceImage, joints[1].image.x, joints[1].image.y);
+					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[2].jointType, joints[2].confidenceImage, joints[2].image.x, joints[2].image.y);
+					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[3].jointType, joints[3].confidenceImage, joints[3].image.x, joints[3].image.y);
+					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[4].jointType, joints[4].confidenceImage, joints[4].image.x, joints[4].image.y);
+					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[5].jointType, joints[5].confidenceImage, joints[5].image.x, joints[5].image.y);
+					//Sragvi Additions end
 					personJoints->QueryJoints(jointPoints);
 					printf("  Type: %d, confidenceImage:%d x: %f y: %f\n", jointPoints[0].jointType, jointPoints[0].confidenceImage, jointPoints[0].image.x, jointPoints[0].image.y);
 					delete[] jointPoints;
