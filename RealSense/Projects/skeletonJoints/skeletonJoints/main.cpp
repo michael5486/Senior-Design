@@ -92,10 +92,8 @@ int main(int argc, WCHAR* argv[]) {
 			/* Waits until new frame is available and locks it for application processing */
 			sts = pp->AcquireFrame(false);
 
-
 			/* Render streams*/
-		//	PXCCapture::Sample *sample = pp->QuerySample();
-			PXCCapture::Sample *sample = pp->QueryPersonTrackingSample();
+			PXCCapture::Sample *sample = pp->QuerySample();
 
 			if (sample) {
 				//printf("running");
@@ -117,22 +115,25 @@ int main(int argc, WCHAR* argv[]) {
 					PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
 					assert(personData != NULL);
 					PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
-					// Sragvi Additions
-				//	printf("  Type: %d, confidenceImage:%d\n", jointPoints[0].jointType, jointPoints[0].confidenceImage);
-					if (!joints)
-					{
-						joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
-					}
+					
+					// Michael modifications
+
+					PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
 					personJoints->QueryJoints(joints);
-					//pxcF32
-					printf("-------Joint Set--------\n");
-					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[0].jointType, joints[0].confidenceImage, joints[0].image.x, joints[0].image.y);
-					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[1].jointType, joints[1].confidenceImage, joints[1].image.x, joints[1].image.y);
-					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[2].jointType, joints[2].confidenceImage, joints[2].image.x, joints[2].image.y);
-					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[3].jointType, joints[3].confidenceImage, joints[3].image.x, joints[3].image.y);
-					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[4].jointType, joints[4].confidenceImage, joints[4].image.x, joints[4].image.y);
-					printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[5].jointType, joints[5].confidenceImage, joints[5].image.x, joints[5].image.y);
-					//Sragvi Additions end
+
+					if (joints[0].jointType != 6 || joints[1].jointType != 7 || joints[2].jointType != 10 || joints[3].jointType != 19 || joints[4].jointType != 16 || joints[5].jointType != 17) {
+						printf("Invalid jointType data...");
+					}
+					else {
+						printf("-------Joint Set--------\n");
+						printf("  Type: %d  confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[0].jointType, joints[0].confidenceImage, joints[0].image.x, joints[0].image.y, joints[0].world.z);
+						printf("  Type: %d  confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[1].jointType, joints[1].confidenceImage, joints[1].image.x, joints[1].image.y, joints[1].world.z);
+						printf("  Type: %d confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[2].jointType, joints[2].confidenceImage, joints[2].image.x, joints[2].image.y, joints[2].world.z);
+						printf("  Type: %d confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[3].jointType, joints[3].confidenceImage, joints[3].image.x, joints[3].image.y, joints[3].world.z);
+						printf("  Type: %d confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[4].jointType, joints[4].confidenceImage, joints[4].image.x, joints[4].image.y, joints[4].world.z);
+						printf("  Type: %d confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[5].jointType, joints[5].confidenceImage, joints[5].image.x, joints[5].image.y, joints[5].world.z);
+					}
+					//Michael modifications end
 					delete[] joints;
 				}
 			}
