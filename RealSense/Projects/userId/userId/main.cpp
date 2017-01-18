@@ -136,7 +136,19 @@ int main(int argc, WCHAR* argv[]) {
 						printf("  Type: %d confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[4].jointType, joints[4].confidenceImage, joints[4].image.x, joints[4].image.y, joints[4].world.z);
 						printf("  Type: %d confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[5].jointType, joints[5].confidenceImage, joints[5].image.x, joints[5].image.y, joints[5].world.z);
 						*/
-						myPoint 
+						myPoint lh;
+						myPoint rh;
+						myPoint head;
+						myPoint spine;
+						myPoint ls;
+						myPoint rs;
+						lh.myPoint::updateValues(joints[0].image.x,joints[0].image.y,joints[0].world.z);
+						rh.myPoint::updateValues(joints[1].image.x, joints[1].image.y, joints[1].world.z);
+						head.myPoint::updateValues(joints[2].image.x, joints[2].image.y, joints[2].world.z);
+						spine.myPoint::updateValues(joints[3].image.x, joints[3].image.y, joints[3].world.z);
+						ls.myPoint::updateValues(joints[4].image.x, joints[4].image.y, joints[4].world.z);
+						rs.myPoint::updateValues(joints[5].image.x, joints[5].image.y, joints[5].world.z);
+
 					}
 					//Michael modifications end
 					delete[] joints;

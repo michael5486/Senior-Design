@@ -13,14 +13,15 @@ class myPerson {
 private:
 	int personID;
 	double torsoHeight, armLength;
-	myPoint JOINT_HEAD;
-	myPoint JOINT_SHOULDER_LEFT;
-	myPoint JOINT_SHOULDER_RIGHT;
 	myPoint JOINT_HAND_LEFT;
 	myPoint JOINT_HAND_RIGHT;
+	myPoint JOINT_HEAD;
 	myPoint JOINT_SPINE_MID;
+	myPoint JOINT_SHOULDER_LEFT;
+	myPoint JOINT_SHOULDER_RIGHT;
 
 public:
+	//what is this?
 	myPerson() : JOINT_HEAD(), JOINT_SHOULDER_LEFT(), JOINT_SHOULDER_RIGHT(), JOINT_HAND_LEFT(),
 		JOINT_HAND_RIGHT(), JOINT_SPINE_MID() {
 		personID = personCounter++;
@@ -30,7 +31,7 @@ public:
 	void printPerson();
 	void updateJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
 	double calculateDistance(myPoint, myPoint);
-	myPoint calculateMidpoint(myPoint, myPoint);
+	//myPoint calculateMidpoint(myPoint, myPoint);
 	double getTorso() { return torsoHeight; }
 	double getArmLength() { return armLength; }
 	// Center of area calc already part of person tracking module
@@ -79,6 +80,7 @@ double myPerson::calculateDistance(myPoint point1, myPoint point2) { //order of 
 	return sqrt(sumXYZ);
 }
 
+/*
 myPoint myPerson::calculateMidpoint(myPoint point1, myPoint point2) { //order of params doesn't matter
 	double difX = fabs(point1.getX() - point2.getX()); //float absolute value function
 	double difY = fabs(point1.getY() - point2.getY());
@@ -105,6 +107,7 @@ myPoint myPerson::calculateMidpoint(myPoint point1, myPoint point2) { //order of
 	myPoint toReturn(finalX, finalY, finalZ);
 	return toReturn;
 }
+*/
 
 double compareTorsoRatio(myPerson person1, myPerson person2) {
 	//compares person2 against person1...order doesn't matter
