@@ -1,6 +1,6 @@
 # RealSense Projects
 
-There are a lot of projects in here. Attaching a brief exlpanation for the important ones
+There are a lot of projects in here. Attaching a brief explanation for the important ones
 
 ## RF_PersonTracking
 Example Person Tracking class with some slight modifications. I used this to try and piece together how person tracking actually worked.
