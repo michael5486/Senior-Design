@@ -13,7 +13,6 @@
 #include "pxcmetadata.h"
 #include "service/pxcsessionservice.h"
 #include <assert.h>
-#include "myPoint.h"
 #include "myPerson.h"
 
 PXCSession *session = NULL;
@@ -26,7 +25,7 @@ volatile bool isStopped = false;
 /* Global variables used in target identification */
 //std::map<const int, myPerson> peopleMap;
 myPerson targetUser;
-bool targetInitialized = false;
+bool isInitialized = false;
 
 int main(int argc, WCHAR* argv[]) {
 	/* Creates an instance of the PXCSenseManager */
@@ -117,20 +116,38 @@ int main(int argc, WCHAR* argv[]) {
 					PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
 					personJoints->QueryJoints(joints);
 					if (joints[0].jointType != 6 || joints[1].jointType != 7 || joints[2].jointType != 10 || joints[3].jointType != 19 || joints[4].jointType != 16 || joints[5].jointType != 17) {
-						printf("Invalid jointType data...");
+						printf("Invalid jointType data...\n");
 					}
 					else {
 						/* Initializing target user */
 						if (isInitialized == false) {
-							printf("Initializing target user...");
-							myPoint leftHand     (joints[0].world.x, joints[0].world.y, joints[0].world.z);
-							myPoint rightHand    (joints[1].world.x, joints[1].world.y, joints[1].world.z);
-							myPoint head         (joints[2].world.x, joints[2].world.y, joints[2].world.z);
-							myPoint shoulderLeft (joints[3].world.x, joints[3].world.y, joints[3].world.z);
-							myPoint shoulderRight(joints[4].world.x, joints[4].world.y, joints[4].world.z);
-							myPoint spineMid     (joints[5].world.x, joints[5].world.y, joints[5].world.z);
+							if (joints[0].image.x == 0 && joints[0].image.y == 0) { //no image coordinates for left hand, skips initialization
+								printf("Invalid left hand...\n");
+								continue;
+							}
+							if (joints[1].image.x == 0 && joints[1].image.y == 0) { //no image coordinates for right hand, skips initialization
+								
+								printf("Invalid right hand...\n");
+								continue;
+							}
+							if (joints[3].image.x == 0 && joints[3].image.y == 0) { //no image coordinates for left shoulder, skips initialization
+								printf("Invalid left shoulder...\n");
+								continue;
+							}
+							if (joints[4].image.x == 0 && joints[4].image.y == 0) { //no image coordinates for right shoulder, skips initialization
+								printf("Invalid right shoulder...\n");
+								continue;
+							}
+							printf("Initializing target user...\n");
+							myPoint leftHand     (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
+							myPoint rightHand    (joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
+							myPoint head         (joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+							myPoint shoulderLeft (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+							myPoint shoulderRight(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
+							myPoint spineMid     (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
 							targetUser.updateJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
 							targetUser.printPerson();
+							isInitialized = true;
 						}
 
 					}
