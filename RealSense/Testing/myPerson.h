@@ -6,45 +6,57 @@ int personCounter = 0; //global variable, increments for each new person constru
 class myPerson{
 	private:
 		int personID;
-		double shoulderDistance, height, leftArmLength, rightArmLength;
+		double shoulderDistance, leftArmLength, rightArmLength;
 		myPoint JOINT_HEAD;
 		myPoint JOINT_SHOULDER_LEFT;
 		myPoint JOINT_SHOULDER_RIGHT;
 		myPoint JOINT_HAND_LEFT;
 		myPoint JOINT_HAND_RIGHT;
-		myPoint JOINT_HIP_LEFT;
-		myPoint JOINT_HIP_RIGHT;
-		myPoint JOINT_FOOT_LEFT;
-		myPoint JOINT_FOOT_RIGHT;
+		myPoint JOINT_SPINE_MID;
 
 	public: 
-		myPerson() : JOINT_HEAD(), JOINT_SHOULDER_LEFT(), JOINT_SHOULDER_RIGHT(), JOINT_HAND_LEFT(),
-			JOINT_HAND_RIGHT(), JOINT_HIP_LEFT(), JOINT_HIP_RIGHT(), JOINT_FOOT_LEFT(), JOINT_FOOT_RIGHT() {
+		//Default Constructor
+		myPerson(myPoint head, myPoint lShoulder, myPoint rShoulder, 
+				myPoint lHand, myPoint rHand, myPoint midSpine) {
+			JOINT_HEAD = head;
+			JOINT_SHOULDER_LEFT = lShoulder;
+			JOINT_SHOULDER_RIGHT = rShoulder;
+			JOINT_HAND_LEFT = lHand;
+			JOINT_HAND_RIGHT = rHand;
+			JOINT_SPINE_MID = midSpine;
 			personID = personCounter++;
 			shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT);
 		}
+		//Secondary Constructor, sets all members to 0
+		myPerson() {
+			myPoint head, lShoulder, rShoulder, lHand, rHand, midSpine;
+			JOINT_HEAD = head;
+			JOINT_SHOULDER_LEFT = lShoulder;
+			JOINT_SHOULDER_RIGHT = rShoulder;
+			JOINT_HAND_LEFT = lHand;
+			JOINT_HAND_RIGHT = rShoulder;
+			JOINT_SPINE_MID = midSpine;
+			personID = personCounter++;
+			shoulderDistance = 0;
+		}
 		void printPerson();
-		void updateJoints(myPoint, myPoint, myPoint, myPoint, myPoint);
+		void updateJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
 		double calculateDistance(myPoint, myPoint);
 		myPoint calculateMidpoint(myPoint, myPoint);
-		myPoint getLeftFoot() { return JOINT_FOOT_LEFT; }
-		myPoint getRightFoot() { return JOINT_FOOT_RIGHT; }
+		myPoint getLeftShoulder() { return JOINT_SHOULDER_LEFT; }
+		myPoint getRightShoulder() { return JOINT_SHOULDER_RIGHT; }
 
 };
 
-void myPerson::updateJoints(myPoint newHead, myPoint newShoulderLeft, myPoint newShoulderRight, myPoint newFootLeft, myPoint newFootRight) {
-	JOINT_HEAD = newHead;
-	JOINT_SHOULDER_LEFT = newShoulderLeft;
-	JOINT_SHOULDER_RIGHT = newShoulderRight;
-	JOINT_FOOT_LEFT = newFootLeft;
-	JOINT_FOOT_RIGHT = newFootRight;
+void myPerson::updateJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine) {
+	JOINT_HEAD = head;
+	JOINT_SHOULDER_LEFT = lShoulder;
+	JOINT_SHOULDER_RIGHT = rShoulder;
+	JOINT_HAND_LEFT = lHand;
+	JOINT_HAND_RIGHT = rHand;
+	JOINT_SPINE_MID = midSpine;
 
 	shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT);
-	
-	myPoint midFeet = calculateMidpoint(JOINT_FOOT_LEFT, JOINT_FOOT_RIGHT);
-	height = calculateDistance(JOINT_HEAD, midFeet);
-
-	leftArmLength = calculateDistance(J)
 
 }
 
@@ -54,11 +66,11 @@ void myPerson::printPerson() {
 	printf("    JOINT_HEAD:           "); JOINT_HEAD.printPoint();
 	printf("    JOINT_SHOULDER_LEFT:  "); JOINT_SHOULDER_LEFT.printPoint();
 	printf("    JOINT_SHOULDER_RIGHT: "); JOINT_SHOULDER_RIGHT.printPoint();
-	printf("    JOINT_FOOT_LEFT:      "); JOINT_FOOT_LEFT.printPoint();
-	printf("    JOINT_FOOT_RIGHT:     "); JOINT_FOOT_RIGHT.printPoint();
+	printf("    JOINT_HAND_LEFT:      "); JOINT_HAND_LEFT.printPoint();
+	printf("    JOINT_FOOT_RIGHT:     "); JOINT_HAND_RIGHT.printPoint();
+	printf("    JOINT_SPINE_MID:      "); JOINT_SPINE_MID.printPoint();
 	printf("  Calculated Features:\n");
 	printf("    shoulderDistance:     %.2f\n", shoulderDistance);
-	printf("    height:               %.2f\n", height);
 
 
 }
