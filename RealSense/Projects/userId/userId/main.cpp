@@ -15,21 +15,18 @@
 #include <assert.h>
 #include "myPoint.h"
 #include "myPerson.h"
-//#include "PersonTrackingFrameRateCalculator.h"
-//#include "PersonTrackingRendererManager.h"
-//#include "PersonTrackingRenderer2d.h"
-//#include "PersonTrackingRenderer3d.h"
-//#include "PersonTrackingProcessor.h"
-//#include "PersonTrackingUtilities.h"
-//#include "ProfileSetMap.h"
-//#include "resource.h"
 
 PXCSession *session = NULL;
 
-//need this crap so it will compile...comes from extern variables in PersonTrackingProcessor.cpp
+/* Variables needed to compile */
 pxcCHAR fileName[1024] = { 0 };
 HANDLE ghMutex;
 volatile bool isStopped = false;
+
+/* Global variables used in target identification */
+//std::map<const int, myPerson> peopleMap;
+myPerson targetUser;
+bool targetInitialized = false;
 
 int main(int argc, WCHAR* argv[]) {
 	/* Creates an instance of the PXCSenseManager */
@@ -80,12 +77,11 @@ int main(int argc, WCHAR* argv[]) {
 		/* Enabling skeleton joint tracking */
 		PXCPersonTrackingModule* personModule = pp->QueryPersonTracking();
 		PXCPersonTrackingConfiguration* personTrackingConfig = personModule->QueryConfiguration();
-		//	personTrackingConfig->SetTrackedAngles(PXCPersonTrackingConfiguration::TrackingAngles::TRACKING_ANGLES_ALL);
 		personTrackingConfig->QueryTracking()->SetTrackingMode(PXCPersonTrackingConfiguration::TrackingConfiguration::TRACKING_MODE_INTERACTIVE);
 
 		PXCPersonTrackingConfiguration::SkeletonJointsConfiguration* skeletonJoints = personTrackingConfig->QuerySkeletonJoints();
 		skeletonJoints->Enable();
-		printf("is jointTracking Enabled?: %d\n", skeletonJoints->IsEnabled());
+		//printf("is jointTracking Enabled?: %d\n", skeletonJoints->IsEnabled());
 
 
 		printf("Initializing stream...");
@@ -113,44 +109,31 @@ int main(int argc, WCHAR* argv[]) {
 
 				/* Found a person */
 				if (numPeople != 0) {
-					printf("Number of people: %d\n", numPeople);
+					//printf("Number of people: %d\n", numPeople);
 					PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
 					assert(personData != NULL);
 					PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
 
-					// Michael modifications
-
 					PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
 					personJoints->QueryJoints(joints);
-
 					if (joints[0].jointType != 6 || joints[1].jointType != 7 || joints[2].jointType != 10 || joints[3].jointType != 19 || joints[4].jointType != 16 || joints[5].jointType != 17) {
 						printf("Invalid jointType data...");
 					}
 					else {
-						/* Print joint locations and confidence values
-						printf("-------Joint Set--------\n");
-						printf("  Type: %d  confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[0].jointType, joints[0].confidenceImage, joints[0].image.x, joints[0].image.y, joints[0].world.z);
-						printf("  Type: %d  confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[1].jointType, joints[1].confidenceImage, joints[1].image.x, joints[1].image.y, joints[1].world.z);
-						printf("  Type: %d confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[2].jointType, joints[2].confidenceImage, joints[2].image.x, joints[2].image.y, joints[2].world.z);
-						printf("  Type: %d confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[3].jointType, joints[3].confidenceImage, joints[3].image.x, joints[3].image.y, joints[3].world.z);
-						printf("  Type: %d confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[4].jointType, joints[4].confidenceImage, joints[4].image.x, joints[4].image.y, joints[4].world.z);
-						printf("  Type: %d confidenceImage:%d x: %.2f y: %.2f z:%.2f\n", joints[5].jointType, joints[5].confidenceImage, joints[5].image.x, joints[5].image.y, joints[5].world.z);
-						*/
-						myPoint lh;
-						myPoint rh;
-						myPoint head;
-						myPoint spine;
-						myPoint ls;
-						myPoint rs;
-						lh.myPoint::updateValues(joints[0].image.x,joints[0].image.y,joints[0].world.z);
-						rh.myPoint::updateValues(joints[1].image.x, joints[1].image.y, joints[1].world.z);
-						head.myPoint::updateValues(joints[2].image.x, joints[2].image.y, joints[2].world.z);
-						spine.myPoint::updateValues(joints[3].image.x, joints[3].image.y, joints[3].world.z);
-						ls.myPoint::updateValues(joints[4].image.x, joints[4].image.y, joints[4].world.z);
-						rs.myPoint::updateValues(joints[5].image.x, joints[5].image.y, joints[5].world.z);
+						/* Initializing target user */
+						if (isInitialized == false) {
+							printf("Initializing target user...");
+							myPoint leftHand     (joints[0].world.x, joints[0].world.y, joints[0].world.z);
+							myPoint rightHand    (joints[1].world.x, joints[1].world.y, joints[1].world.z);
+							myPoint head         (joints[2].world.x, joints[2].world.y, joints[2].world.z);
+							myPoint shoulderLeft (joints[3].world.x, joints[3].world.y, joints[3].world.z);
+							myPoint shoulderRight(joints[4].world.x, joints[4].world.y, joints[4].world.z);
+							myPoint spineMid     (joints[5].world.x, joints[5].world.y, joints[5].world.z);
+							targetUser.updateJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
+							targetUser.printPerson();
+						}
 
 					}
-					//Michael modifications end
 					delete[] joints;
 				}
 			}
