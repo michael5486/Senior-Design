@@ -4,8 +4,9 @@
 int personCounter = 0; //global variable, increments for each new person constructed
 
 class myPerson{
-	private:
-		int personID;
+	public: 
+		//int personID; //unneccessary using my method
+		//making all of the members public allows easier access, I don't wanna make a bunch more functions just to access these
 		double shoulderDistance, leftArmLength, rightArmLength, torsoHeight;
 		myPoint JOINT_HEAD;
 		myPoint JOINT_SHOULDER_LEFT;
@@ -13,9 +14,7 @@ class myPerson{
 		myPoint JOINT_HAND_LEFT;
 		myPoint JOINT_HAND_RIGHT;
 		myPoint JOINT_SPINE_MID;
-
-	public: 
-		//Default Constructor
+		//Primary Constructor
 		myPerson(myPoint head, myPoint lShoulder, myPoint rShoulder, 
 				myPoint lHand, myPoint rHand, myPoint midSpine) {
 			JOINT_HEAD = head;
@@ -24,13 +23,13 @@ class myPerson{
 			JOINT_HAND_LEFT = lHand;
 			JOINT_HAND_RIGHT = rHand;
 			JOINT_SPINE_MID = midSpine;
-			personID = personCounter++;
+			//personID = personCounter++;
 			shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT);
 			leftArmLength = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT);
 			rightArmLength = calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT);
 			torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID);
 		}
-		//Secondary Constructor, sets all members to 0
+		//Default Constructor, sets all members to 0
 		myPerson() {
 			myPoint head, lShoulder, rShoulder, lHand, rHand, midSpine;
 			JOINT_HEAD = head;
@@ -40,7 +39,7 @@ class myPerson{
 			JOINT_HAND_RIGHT = rShoulder;
 			JOINT_SPINE_MID = midSpine;
 			
-			personID = personCounter++;
+			//personID = personCounter++;
 			shoulderDistance = 0;
 			leftArmLength = 0;
 			rightArmLength = 0;
@@ -73,7 +72,7 @@ void myPerson::updateJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, 
 }
 
 void myPerson::printPerson() {
-	printf("Printing person%d:\n", personID);
+	printf("Printing person%d:\n");
 	printf("  Joint Locations:\n");
 	printf("    JOINT_HEAD:           "); JOINT_HEAD.printPoint();
 	printf("    JOINT_SHOULDER_LEFT:  "); JOINT_SHOULDER_LEFT.printPoint();

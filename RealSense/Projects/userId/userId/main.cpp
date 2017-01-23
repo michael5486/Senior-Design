@@ -28,6 +28,7 @@ myPerson targetUser;
 bool isInitialized = false;
 
 int main(int argc, WCHAR* argv[]) {
+	double compareUser(myPerson,myPerson); //user comparison function
 	/* Creates an instance of the PXCSenseManager */
 	PXCSenseManager *pp = PXCSenseManager::CreateInstance();
 
@@ -94,7 +95,7 @@ int main(int argc, WCHAR* argv[]) {
 
 			if (sample) {
 				//printf("running");
-				PXCPersonTrackingModule* personModule = pp->QueryPersonTracking();
+				PXCPersonTrackingModule* personModule = pp->QueryPersonTracking(); //is this line still necessary? Isn't personModule already initialized and the associated functions enabled?
 
 				/* If no persons are visible, renders and releases current frame */
 				if (personModule == NULL) {
@@ -120,6 +121,8 @@ int main(int argc, WCHAR* argv[]) {
 					}
 					else {
 						/* Initializing target user */
+						/* We should average our tracked joints over 5 seconds or something, removing outliers (median calculated values)
+						, initializing shouldn't occur in one frame*/
 						if (isInitialized == false) {
 							if (joints[0].image.x == 0 && joints[0].image.y == 0) { //no image coordinates for left hand, skips initialization
 								printf("Invalid left hand...\n");
@@ -149,7 +152,38 @@ int main(int argc, WCHAR* argv[]) {
 							targetUser.printPerson();
 							isInitialized = true;
 						}
+						else {
+							double userConf = 0.0; //calculate confidence value that person found is user
+							myPerson found; //this person's tracked values will be closest to user's, location will be outputted to microcontroller (or some other function or some shit)
+							for (int perIter = 0; perIter < numPeople; perIter++) { //iterating across these mofos
+								myPerson curr;
+								PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, perIter);
+								assert(personData != NULL); 
+								PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
 
+								PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
+								personJoints->QueryJoints(joints);
+								if (joints[0].jointType != 6 || joints[1].jointType != 7 || joints[2].jointType != 10 || joints[3].jointType != 19 || joints[4].jointType != 16 || joints[5].jointType != 17) {
+									printf("Invalid jointType data...\n");
+								}
+								else {
+									printf("Initializing target user...\n");
+									myPoint leftHand(joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
+									myPoint rightHand(joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
+									myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+									myPoint shoulderLeft(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+									myPoint shoulderRight(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
+									myPoint spineMid(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
+									curr.updateJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
+									//curr.printPerson(); //can implement while testing
+									double currConf = compareUser(curr,targetUser); //confidence that current person is user
+									if (currConf > userConf) {
+										found = curr; //the user location values can be extracted using myPerson found
+										userConf = currConf;
+									}
+								}
+							}
+						}
 					}
 					delete[] joints;
 				}
@@ -171,4 +205,8 @@ int main(int argc, WCHAR* argv[]) {
 	// Clean Up
 	pp->Release();
 	return 0;
+}
+
+double compareUser(myPerson curr, myPerson user) {
+	return 0.0;
 }
