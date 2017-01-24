@@ -23,12 +23,14 @@ HANDLE ghMutex;
 volatile bool isStopped = false;
 
 /* Global variables used in target identification */
-//std::map<const int, myPerson> peopleMap;
 myPerson targetUser;
 bool isInitialized = false;
 
+/* Method declarations */
+double compareUser(myPerson, myPerson); //user comparison function
+
+
 int main(int argc, WCHAR* argv[]) {
-	double compareUser(myPerson,myPerson); //user comparison function
 	/* Creates an instance of the PXCSenseManager */
 	PXCSenseManager *pp = PXCSenseManager::CreateInstance();
 
@@ -95,7 +97,7 @@ int main(int argc, WCHAR* argv[]) {
 
 			if (sample) {
 				//printf("running");
-				PXCPersonTrackingModule* personModule = pp->QueryPersonTracking(); //is this line still necessary? Isn't personModule already initialized and the associated functions enabled?
+				PXCPersonTrackingModule* personModule = pp->QueryPersonTracking();
 
 				/* If no persons are visible, renders and releases current frame */
 				if (personModule == NULL) {
@@ -121,6 +123,7 @@ int main(int argc, WCHAR* argv[]) {
 					}
 					else {
 						/* Initializing target user */
+
 						/* We should average our tracked joints over 5 seconds or something, removing outliers (median calculated values)
 						, initializing shouldn't occur in one frame*/
 						if (isInitialized == false) {
@@ -153,8 +156,13 @@ int main(int argc, WCHAR* argv[]) {
 							isInitialized = true;
 						}
 						else {
+							/* People on FOV after target user initialized */
+							//let's start with just two people
 							double userConf = 0.0; //calculate confidence value that person found is user
+							
 							myPerson found; //this person's tracked values will be closest to user's, location will be outputted to microcontroller (or some other function or some shit)
+							
+							
 							for (int perIter = 0; perIter < numPeople; perIter++) { //iterating across these mofos
 								myPerson curr;
 								PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, perIter);
@@ -168,15 +176,16 @@ int main(int argc, WCHAR* argv[]) {
 								}
 								else {
 									printf("Initializing target user...\n");
-									myPoint leftHand(joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
-									myPoint rightHand(joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
-									myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
-									myPoint shoulderLeft(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+									myPoint leftHand     (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
+									myPoint rightHand    (joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
+									myPoint head         (joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+									myPoint shoulderLeft (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
 									myPoint shoulderRight(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
-									myPoint spineMid(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
+									myPoint spineMid     (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
 									curr.updateJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
 									//curr.printPerson(); //can implement while testing
 									double currConf = compareUser(curr,targetUser); //confidence that current person is user
+									
 									if (currConf > userConf) {
 										found = curr; //the user location values can be extracted using myPerson found
 										userConf = currConf;
@@ -209,4 +218,8 @@ int main(int argc, WCHAR* argv[]) {
 
 double compareUser(myPerson curr, myPerson user) {
 	return 0.0;
+}
+
+void initializeUser(PXCPersonTrackingModule* personModule) {
+
 }
