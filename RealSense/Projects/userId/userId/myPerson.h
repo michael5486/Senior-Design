@@ -1,6 +1,10 @@
 #include "myPoint.h"
 #include <math.h>
 
+#define e 2.718 //mathematical constant
+#define RATIO_EXP_DECAY 2.31 //experimentally generated value
+#define VAL_EXP_DECAY 0.15
+
 int personCounter = 0; //global variable, increments for each new person constructed
 
 class myPerson{
@@ -39,7 +43,7 @@ class myPerson{
 			JOINT_HAND_RIGHT = rShoulder;
 			JOINT_SPINE_MID = midSpine;
 			
-			//personID = personCounter++;
+			personID = personCounter++;
 			shoulderDistance = 0;
 			leftArmLength = 0;
 			rightArmLength = 0;
@@ -52,10 +56,10 @@ class myPerson{
 		myPoint calculateMidpoint(myPoint, myPoint);
 		myPoint getLeftShoulder() { return JOINT_SHOULDER_LEFT; }
 		myPoint getRightShoulder() { return JOINT_SHOULDER_RIGHT; }
-		double getleftArmLength() { return leftArmLength; }
-		double getrightArmLength() { return rightArmLength; }
+		double getLeftArmLength() { return leftArmLength; }
+		double getRightArmLength() { return rightArmLength; }
 		double getTorso() { return torsoHeight; }
-		double getArmLength(myPerson);
+		double getArmLength();
 };
 
 void myPerson::updateJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine) {
@@ -74,7 +78,7 @@ void myPerson::updateJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, 
 }
 
 void myPerson::printPerson() {
-	printf("Printing person%d:\n");
+	printf("Printing person%d:\n", personID);
 	printf("  Joint Locations:\n");
 	printf("    JOINT_HEAD:           "); JOINT_HEAD.printPoint();
 	printf("    JOINT_SHOULDER_LEFT:  "); JOINT_SHOULDER_LEFT.printPoint();
@@ -126,20 +130,81 @@ myPoint myPerson::calculateMidpoint(myPoint point1, myPoint point2) { //order of
 	return toReturn;
 }
 
-double myPerson::getArmLength(myPerson a) {
-	double lal = a.myPerson::getleftArmLength();
-	double ral = a.myPerson::getrightArmLength();
-	if (lal == 0 && ral == 0) { 
+/* Returns the average of rightArmLength and leftArmLength */
+double myPerson::getArmLength() {
+	double leftArmLength = this->getLeftArmLength();
+	double rightArmLength = this->getRightArmLength();
+	//Are these issues we will have to worry about? I understand the concept but I don't see how making it 0 helps
+	//Also dont use shitty variable names...there will be a lot of code and while ral might make sense now it wont in a couple weeks
+	if (leftArmLength == 0 && rightArmLength == 0) { 
 		printf("Arm lengths not reliable");
 		return 0.0;
 	}
-	else if (lal == 0) {
-		return ral;
+	else if (leftArmLength == 0) {
+		return rightArmLength;
 	}
-	else if (ral == 0) {
-		return lal;
+	else if (rightArmLength == 0) {
+		return leftArmLength;
 	}
 	else {
-		return (ral + lal) / 2;
+		return (rightArmLength + leftArmLength) / 2;
 	}
+}
+
+
+/* Compares person1 against person2. Order doesn't matter 
+   returns value 100 if ratios are identical, with expnentially decreasing values as they get more different
+   y  = 100e^(-2.31*x)
+   x = | ratio1 - ratio 2 | */
+double compareTorsoRatio(myPerson person1, myPerson person2) {
+	
+	double ratio1 = person1.getTorso() / person1.getArmLength();
+	double ratio2 = person2.getTorso() / person2.getArmLength();
+
+	double x = fabs(ratio1 - ratio2);
+
+	double neg = -1 * RATIO_EXP_DECAY * x;
+
+	double eToPower = pow(e, neg);
+	double y = 100 * eToPower;
+
+	//printf("Ratio Similarity = %f\n", y);
+
+	return y;
+}
+
+/* Compares the actual values of torso and arm lengths. Order doesn't matter
+   returns value between 0 and 100. 100 means that values are identical	*/
+double compareTorsoAndArmLengths(myPerson person1, myPerson person2) {
+
+	double arm1 = person1.getArmLength();
+	double arm2 = person2.getArmLength();
+
+	double torso1 = person1.getTorso();
+	double torso2 = person2.getTorso();
+
+	double x1 = fabs(arm1 - arm2);
+	double neg = -1 * VAL_EXP_DECAY * x1;
+
+	double eToPower = pow(e, neg);
+
+	//printf("e^power: %f\n", eToPower);
+
+	double y1 = 100 * eToPower;
+
+	//printf("Arm Similarity = %f\n", y1);
+
+
+	double x2 = fabs(torso1 - torso2);
+	neg = -1 * VAL_EXP_DECAY * x2;
+	eToPower = pow(e, neg);
+	//printf("e^power: %f\n", eToPower);
+	double y2 = 100 * eToPower;
+
+	//printf("Torso Similarity = %f\n", y2);
+
+	//calculate average of torso and arm scores
+	//printf("Combined Similarity: %f\n", (y1 + y2) / 2);
+
+	return (y1 + y2) / 2;
 }

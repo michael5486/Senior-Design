@@ -27,7 +27,10 @@ myPerson targetUser;
 bool isInitialized = false;
 
 /* Method declarations */
-double compareUser(myPerson, myPerson); //user comparison function
+void initializeTargetUser(PXCPersonTrackingModule* personModule);
+boolean isJointInfoValid(PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints);
+void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople);
+
 
 
 int main(int argc, WCHAR* argv[]) {
@@ -58,18 +61,18 @@ int main(int argc, WCHAR* argv[]) {
 
 		/* Initializes the pipeline */
 		sts = pp->Init();
-		if (sts<PXC_STATUS_NO_ERROR) {
+		if (sts < PXC_STATUS_NO_ERROR) {
 			/* Enable a single stream */
 			pp->Close();
 			pp->EnableStream(PXCCapture::STREAM_TYPE_DEPTH);
 			sts = pp->Init();
-			if (sts<PXC_STATUS_NO_ERROR) {
+			if (sts < PXC_STATUS_NO_ERROR) {
 				pp->Close();
 				pp->EnableStream(PXCCapture::STREAM_TYPE_COLOR);
 				sts = pp->Init();
 			}
 
-			if (sts<PXC_STATUS_NO_ERROR) {
+			if (sts < PXC_STATUS_NO_ERROR) {
 				wprintf_s(L"Failed to locate any video stream(s)\n");
 				pp->Release();
 				return sts;
@@ -111,92 +114,22 @@ int main(int argc, WCHAR* argv[]) {
 
 				/* Found a person */
 				if (numPeople != 0) {
-					//printf("Number of people: %d\n", numPeople);
-					PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
-					assert(personData != NULL);
-					PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
 
-					PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
-					personJoints->QueryJoints(joints);
-					if (joints[0].jointType != 6 || joints[1].jointType != 7 || joints[2].jointType != 10 || joints[3].jointType != 19 || joints[4].jointType != 16 || joints[5].jointType != 17) {
-						printf("Invalid jointType data...\n");
+					/* Initializing target user */
+					if (isInitialized == false) {
+						initializeTargetUser(personModule);
+
 					}
+					/* Comparing people in FOV against target user */
 					else {
-						/* Initializing target user */
-
-						/* We should average our tracked joints over 5 seconds or something, removing outliers (median calculated values)
-						, initializing shouldn't occur in one frame*/
-						if (isInitialized == false) {
-							if (joints[0].image.x == 0 && joints[0].image.y == 0) { //no image coordinates for left hand, skips initialization
-								printf("Invalid left hand...\n");
-								continue;
-							}
-							if (joints[1].image.x == 0 && joints[1].image.y == 0) { //no image coordinates for right hand, skips initialization
-								
-								printf("Invalid right hand...\n");
-								continue;
-							}
-							if (joints[3].image.x == 0 && joints[3].image.y == 0) { //no image coordinates for left shoulder, skips initialization
-								printf("Invalid left shoulder...\n");
-								continue;
-							}
-							if (joints[4].image.x == 0 && joints[4].image.y == 0) { //no image coordinates for right shoulder, skips initialization
-								printf("Invalid right shoulder...\n");
-								continue;
-							}
-							printf("Initializing target user...\n");
-							myPoint leftHand     (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
-							myPoint rightHand    (joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
-							myPoint head         (joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
-							myPoint shoulderLeft (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
-							myPoint shoulderRight(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
-							myPoint spineMid     (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-							targetUser.updateJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
-							targetUser.printPerson();
-							isInitialized = true;
-						}
-						else {
-							/* People on FOV after target user initialized */
-							//let's start with just two people
-							double userConf = 0.0; //calculate confidence value that person found is user
-							
-							myPerson found; //this person's tracked values will be closest to user's, location will be outputted to microcontroller (or some other function or some shit)
-							
-							
-							for (int perIter = 0; perIter < numPeople; perIter++) { //iterating across these mofos
-								myPerson curr;
-								PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, perIter);
-								assert(personData != NULL); 
-								PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
-
-								PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
-								personJoints->QueryJoints(joints);
-								if (joints[0].jointType != 6 || joints[1].jointType != 7 || joints[2].jointType != 10 || joints[3].jointType != 19 || joints[4].jointType != 16 || joints[5].jointType != 17) {
-									printf("Invalid jointType data...\n");
-								}
-								else {
-									printf("Initializing target user...\n");
-									myPoint leftHand     (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
-									myPoint rightHand    (joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
-									myPoint head         (joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
-									myPoint shoulderLeft (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
-									myPoint shoulderRight(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
-									myPoint spineMid     (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-									curr.updateJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
-									//curr.printPerson(); //can implement while testing
-									double currConf = compareUser(curr,targetUser); //confidence that current person is user
-									
-									if (currConf > userConf) {
-										found = curr; //the user location values can be extracted using myPerson found
-										userConf = currConf;
-									}
-								}
-							}
-						}
+						comparePeopleInFOV(personModule, numPeople);
+					//	myPerson found; //this person's tracked values will be closest to user's, location will be outputted to microcontroller (or some other function or some shit)
 					}
-					delete[] joints;
+
 				}
 			}
+
+
 			/* Releases lock so pipeline can process next frame */
 			pp->ReleaseFrame();
 
@@ -216,10 +149,103 @@ int main(int argc, WCHAR* argv[]) {
 	return 0;
 }
 
-double compareUser(myPerson curr, myPerson user) {
-	return 0.0;
+
+
+
+
+
+
+/* We should average our tracked joints over 5 seconds or something, removing outliers (median calculated values)
+, initializing shouldn't occur in one frame*/
+void initializeTargetUser(PXCPersonTrackingModule* personModule) {
+	/* Accesses the only person in camera's FOV, our target user */
+	PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
+	assert(personData != NULL);
+
+	/* Queries for skeleton joint data */
+	PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
+
+	PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
+	personJoints->QueryJoints(joints);
+
+	if (isJointInfoValid(joints) == false) {
+		//printf("Invalid jointType data...\n");
+	}
+	/* Joint info is valid, initialize target user */
+	else {
+		printf("Initializing target user...\n");
+		myPoint leftHand(joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
+		myPoint rightHand(joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
+		myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+		myPoint shoulderLeft(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+		myPoint shoulderRight(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
+		myPoint spineMid(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
+		targetUser.updateJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
+		targetUser.printPerson();
+		isInitialized = true;
+	}
+
+	/* Frees up space allocated for joints array, it is not needed anymore */
+	delete[] joints;
 }
 
-void initializeUser(PXCPersonTrackingModule* personModule) {
+/* Checks to see if gathered joint info is valid data */
+boolean isJointInfoValid(PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints) {
+	/* Not valid data, return false */
+	if (joints[0].jointType != 6 || joints[1].jointType != 7 || joints[2].jointType != 10 || joints[3].jointType != 19 || joints[4].jointType != 16 || joints[5].jointType != 17) {
+		return false;
+		printf("Garbage data...\n");
+	}
+	if (joints[0].image.x == 0 && joints[0].image.y == 0) { //no image coordinates for left hand, skips initialization
+		printf("Invalid left hand...\n");
+		return false;
+	}
+	if (joints[1].image.x == 0 && joints[1].image.y == 0) { //no image coordinates for right hand, skips initialization
+		printf("Invalid right hand...\n");
+		return false;
+	}
+	if (joints[3].image.x == 0 && joints[3].image.y == 0) { //no image coordinates for left shoulder, skips initialization
+		printf("Invalid left shoulder...\n");
+		return false;
+	}
+	if (joints[4].image.x == 0 && joints[4].image.y == 0) { //no image coordinates for right shoulder, skips initialization
+		printf("Invalid right shoulder...\n");
+		return false;
+	}
 
+	/* All testsed issues passed, joint info is valid */
+	return true;
+}
+
+/* Iterates across all people in FOV, compares against target user */
+void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople) {
+
+	/* Iterates across all people in FOV */
+	for (int perIter = 0; perIter < numPeople; perIter++) {
+
+		PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, perIter);
+		assert(personData != NULL);
+		PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
+
+		PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
+		personJoints->QueryJoints(joints);
+
+
+		if (isJointInfoValid(joints) == false) {
+			//printf("Invalid joint data...\n");
+		}
+		else {
+			myPoint leftHand     (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
+			myPoint rightHand    (joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
+			myPoint head         (joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+			myPoint leftShoulder (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+			myPoint rightShoulder(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
+			myPoint spineMid     (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
+			myPerson curr = myPerson(head, leftShoulder, rightShoulder, leftHand, rightHand, spineMid);
+			//curr.printPerson(); //can implement while testing
+			double currConf = compareTorsoAndArmLengths(curr, targetUser); //confidence that current person is user
+			printf("%d. Similarity = %.2f\n", perIter, currConf);
+
+		}
+	}
 }
