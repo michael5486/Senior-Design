@@ -4,9 +4,8 @@
 int personCounter = 0; //global variable, increments for each new person constructed
 
 class myPerson{
-	public: 
-		//int personID; //unneccessary using my method
-		//making all of the members public allows easier access, I don't wanna make a bunch more functions just to access these
+	private:
+		int personID; //unneccessary using my method
 		double shoulderDistance, leftArmLength, rightArmLength, torsoHeight;
 		myPoint JOINT_HEAD;
 		myPoint JOINT_SHOULDER_LEFT;
@@ -14,6 +13,7 @@ class myPerson{
 		myPoint JOINT_HAND_LEFT;
 		myPoint JOINT_HAND_RIGHT;
 		myPoint JOINT_SPINE_MID;
+	public: 
 		//Primary Constructor
 		myPerson(myPoint head, myPoint lShoulder, myPoint rShoulder, 
 				myPoint lHand, myPoint rHand, myPoint midSpine) {
@@ -23,7 +23,7 @@ class myPerson{
 			JOINT_HAND_LEFT = lHand;
 			JOINT_HAND_RIGHT = rHand;
 			JOINT_SPINE_MID = midSpine;
-			//personID = personCounter++;
+			personID = personCounter++;
 			shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT);
 			leftArmLength = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT);
 			rightArmLength = calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT);
@@ -45,7 +45,6 @@ class myPerson{
 			rightArmLength = 0;
 			torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID);
 
-
 		}
 		void printPerson();
 		void updateJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
@@ -53,7 +52,10 @@ class myPerson{
 		myPoint calculateMidpoint(myPoint, myPoint);
 		myPoint getLeftShoulder() { return JOINT_SHOULDER_LEFT; }
 		myPoint getRightShoulder() { return JOINT_SHOULDER_RIGHT; }
-
+		double getleftArmLength() { return leftArmLength; }
+		double getrightArmLength() { return rightArmLength; }
+		double getTorso() { return torsoHeight; }
+		double getArmLength(myPerson);
 };
 
 void myPerson::updateJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine) {
@@ -122,4 +124,22 @@ myPoint myPerson::calculateMidpoint(myPoint point1, myPoint point2) { //order of
 	}
 	myPoint toReturn(finalX, finalY, finalZ);
 	return toReturn;
+}
+
+double myPerson::getArmLength(myPerson a) {
+	double lal = a.myPerson::getleftArmLength();
+	double ral = a.myPerson::getrightArmLength();
+	if (lal == 0 && ral == 0) { 
+		printf("Arm lengths not reliable");
+		return 0.0;
+	}
+	else if (lal == 0) {
+		return ral;
+	}
+	else if (ral == 0) {
+		return lal;
+	}
+	else {
+		return (ral + lal) / 2;
+	}
 }
