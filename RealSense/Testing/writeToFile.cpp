@@ -3,32 +3,40 @@
 #include <string>
 #include <iomanip>
 #include <stdlib.h>
+#include <sstream>
+#include "myPerson.h"
 
 using namespace std;
+
+/* Function declaration */
+myPerson createRandomPerson();
+string pointToString(myPoint);
+
 
 
 int main() {
 
-	/* Iinitialize random seed. Needs to happen in a method */
+	/* Initialize random seed. Needs to happen in a method */
 	srand(0);
 
 
 	char separator = ' ';
 	int countWidth = 15;
-	int headWidth = 25;
-	int shoulderWidth = 25;
-	int handWidth = 25;
-	int spineWidth = 25;
+	int headWidth = 35;
+	int shoulderWidth = 35;
+	int handWidth = 35;
+	int spineWidth = 35;
 
 
 
 	ofstream outputFile;
-	outputFile.open("example.txt");
-	outputFile << "Hello world!!!\n";
+	outputFile.open("example.txt"); //tells the stream to put things in exaample.txt
+	
+	outputFile << "\n";
 
-	for (int i = 0; i < 10; i++) {
-		outputFile << i << ", ";
-	}
+	outputFile << "Beginning data output...";
+
+	outputFile << "\n\n\n";
 
 	outputFile << "\n";
 
@@ -44,13 +52,15 @@ int main() {
 	outputFile << "\n";
 
 	while (timeCounter < 100) {
+		myPerson newPerson = createRandomPerson();
+
 		outputFile << left << setw(countWidth) << setfill(separator) << timeCounter++;
-		outputFile << left << setw(headWidth) << setfill(separator) << rand() % 100;;
-		outputFile << left << setw(shoulderWidth) << setfill(separator) << rand() % 100;
-		outputFile << left << setw(shoulderWidth) << setfill(separator) << rand() % 100;
-		outputFile << left << setw(handWidth) << setfill(separator) << rand() % 100;
-		outputFile << left << setw(handWidth) << setfill(separator) << rand() % 100;
-		outputFile << left << setw(spineWidth) << setfill(separator) << rand() % 100;
+		outputFile << left << setw(headWidth) << setfill(separator) << pointToString(newPerson.getHead());
+		outputFile << left << setw(shoulderWidth) << setfill(separator) << pointToString(newPerson.getLeftShoulder());
+		outputFile << left << setw(shoulderWidth) << setfill(separator) << pointToString(newPerson.getRightShoulder());
+		outputFile << left << setw(handWidth) << setfill(separator) << pointToString(newPerson.getLeftHand());
+		outputFile << left << setw(handWidth) << setfill(separator) << pointToString(newPerson.getRightHand());
+		outputFile << left << setw(spineWidth) << setfill(separator) << pointToString(newPerson.getSpineMid());
 		outputFile << "\n";
 
 	}
@@ -62,11 +72,34 @@ int main() {
 	outputFile << left << setw(nameWidth) << setfill(separator) << "Bird";*/
 
 
-
-
-
-
 	outputFile.close();
 
 
 }
+
+myPerson createRandomPerson() {
+	myPoint head      (rand() % 100, rand() % 100, rand() % 100);
+	myPoint lShoulder (rand() % 100, rand() % 100, rand() % 100);
+	myPoint rShoulder (rand() % 100, rand() % 100, rand() % 100);
+	myPoint lHand     (rand() % 100, rand() % 100, rand() % 100);
+	myPoint rHand     (rand() % 100, rand() % 100, rand() % 100);
+	myPoint spineMid  (rand() % 100, rand() % 100, rand() % 100);
+	myPerson newPerson(head, lShoulder, rShoulder, lHand, rHand, spineMid);
+	return newPerson;
+
+}
+
+string pointToString(myPoint point) {
+	stringstream ss;
+	//ss << left << setprecision(2) << "(" << point.getWorldX() << ", " << point.getWorldY() << ", " << point.getWorldZ() << ")";
+	ss << left << "(";
+	ss << left << setprecision(2) << setw(5) << point.getWorldX();
+	ss << left << ", ";
+	ss << left << setprecision(2) << setw(5) << point.getWorldY();
+	ss << left << ", ";
+	ss << left << setprecision(2) << setw(5) << point.getWorldZ();
+	ss << left << ")";
+
+	return ss.str(); //converts stringStream to a string
+
+} 
