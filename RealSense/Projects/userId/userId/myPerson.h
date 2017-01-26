@@ -14,7 +14,7 @@ class myPerson{
 		int initializeCount;
 		int personID; //unneccessary using my method
 		double shoulderDistance, leftArmLength, rightArmLength, torsoHeight; //raw shoulder values
-		double shoulderDistanceSum, leftArmLengthSum, rightArmLengthSum, rightArmLengthSum; //continuosly updated distance values. Refined over multiple iterations
+		//double shoulderDistanceSum, leftArmLengthSum, rightArmLengthSum, rightArmLengthSum; //continuosly updated distance values. Refined over multiple iterations
 		
 		myPoint JOINT_HEAD;
 		myPoint JOINT_SHOULDER_LEFT;
@@ -57,7 +57,7 @@ class myPerson{
 
 		}
 		void printPerson();
-		void updateJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
+		void changeJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
 		double calculateDistance(myPoint, myPoint);
 		myPoint calculateMidpoint(myPoint, myPoint);
 
@@ -76,7 +76,7 @@ class myPerson{
 };
 
 /* Changes the joints for a person and the respective distance calculations */
-void myPerson::changeJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine, int initializeCount) {
+void myPerson::changeJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine) {
 	JOINT_HEAD = head;
 	JOINT_SHOULDER_LEFT = lShoulder;
 	JOINT_SHOULDER_RIGHT = rShoulder;
