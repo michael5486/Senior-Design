@@ -5,12 +5,17 @@
 #define RATIO_EXP_DECAY 2.31 //experimentally generated value
 #define VAL_EXP_DECAY 0.15
 
+#define INITIALIZE_COUNT_MAX 10 //number of iterations before target is initialized
+
 int personCounter = 0; //global variable, increments for each new person constructed
 
 class myPerson{
 	private:
+		int initializeCount;
 		int personID; //unneccessary using my method
-		double shoulderDistance, leftArmLength, rightArmLength, torsoHeight;
+		double shoulderDistance, leftArmLength, rightArmLength, torsoHeight; //raw shoulder values
+		double shoulderDistanceSum, leftArmLengthSum, rightArmLengthSum, rightArmLengthSum; //continuosly updated distance values. Refined over multiple iterations
+		
 		myPoint JOINT_HEAD;
 		myPoint JOINT_SHOULDER_LEFT;
 		myPoint JOINT_SHOULDER_RIGHT;
@@ -32,6 +37,7 @@ class myPerson{
 			leftArmLength = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT);
 			rightArmLength = calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT);
 			torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID);
+
 		}
 		//Default Constructor, sets all members to 0
 		myPerson() {
@@ -54,15 +60,23 @@ class myPerson{
 		void updateJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
 		double calculateDistance(myPoint, myPoint);
 		myPoint calculateMidpoint(myPoint, myPoint);
-		myPoint getLeftShoulder() { return JOINT_SHOULDER_LEFT; }
-		myPoint getRightShoulder() { return JOINT_SHOULDER_RIGHT; }
+
 		double getLeftArmLength() { return leftArmLength; }
 		double getRightArmLength() { return rightArmLength; }
 		double getTorso() { return torsoHeight; }
 		double getArmLength();
+		int getInitializeCount() { return initializeCount; }
+
+		myPoint getHead() { return JOINT_HEAD; }
+		myPoint getLeftShoulder() { return JOINT_SHOULDER_LEFT; }
+		myPoint getRightShoulder() { return JOINT_SHOULDER_RIGHT; }
+		myPoint getLeftHand() { return JOINT_HAND_LEFT; }
+		myPoint getRightHand() { return JOINT_HAND_LEFT; }
+		myPoint getSpineMid() { return JOINT_SPINE_MID; }
 };
 
-void myPerson::updateJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine) {
+/* Changes the joints for a person and the respective distance calculations */
+void myPerson::changeJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine, int initializeCount) {
 	JOINT_HEAD = head;
 	JOINT_SHOULDER_LEFT = lShoulder;
 	JOINT_SHOULDER_RIGHT = rShoulder;
@@ -76,6 +90,11 @@ void myPerson::updateJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, 
 	torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID);
 
 }
+
+/* Updates the joints of the person, but recalculates
+void myPerson::updatePerson(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine, int initializeCount) {
+
+}*/
 
 void myPerson::printPerson() {
 	printf("Printing person%d:\n", personID);
