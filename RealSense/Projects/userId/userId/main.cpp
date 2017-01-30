@@ -310,28 +310,31 @@ void printToLog(myPerson newPerson) {
 }
 
 string pointToString(myPoint point) {
+	point.printPoint();
 	stringstream ss;
-	ss << left << setprecision(2) << setw(5) << point.getWorldX();
+	ss << left << setprecision(5) << setw(5) << point.getWorldX();
 	ss << left << ", ";
-	ss << left << setprecision(2) << setw(5) << point.getWorldY();
+	ss << left << setprecision(5) << setw(5) << point.getWorldY();
 	ss << left << ", ";
-	ss << left << setprecision(2) << setw(5) << point.getWorldZ();
+	ss << left << setprecision(5) << setw(5) << point.getWorldZ();
 	return ss.str(); //converts stringStream to a string
 }
 
 myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* personData) {
 	assert(personData != NULL);
 	PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
+	/* Initializes null person */
+	myPerson newPerson;
 
 	PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
 	personJoints->QueryJoints(joints);
+	
+	/* Joint info invalid, returns null user */
 	if (isJointInfoValid(joints) == false) {
-		myPerson newPerson;
-		return newPerson; //returns a null person
+		printf("Converstion unsuccessful, outputting null person...\n");
 	}
-	/* Joint info is valid, initialize target user */
+	/* Joint info is valid,c changes newPerson to have valid joint data */
 	else {
-		timeCounter++;
 		printf("Conversion successful, outputting to log...\n");
 		myPoint leftHand(joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
 		myPoint rightHand(joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
@@ -339,9 +342,10 @@ myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* personData) {
 		myPoint shoulderLeft(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
 		myPoint shoulderRight(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
 		myPoint spineMid(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-		myPerson newPerson(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
-		return newPerson;
+		newPerson.changeJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
 	}
+	timeCounter++;
 	delete[] joints;
+	return newPerson;
 
 }
