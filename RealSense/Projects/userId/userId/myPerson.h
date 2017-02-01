@@ -15,7 +15,7 @@ class myPerson{
 		int personID; //unneccessary using my method
 		double shoulderDistance, leftArmLength, rightArmLength, torsoHeight; //raw shoulder values
 		//double shoulderDistanceSum, leftArmLengthSum, rightArmLengthSum, rightArmLengthSum; //continuosly updated distance values. Refined over multiple iterations
-		
+
 		myPoint JOINT_HEAD;
 		myPoint JOINT_SHOULDER_LEFT;
 		myPoint JOINT_SHOULDER_RIGHT;
