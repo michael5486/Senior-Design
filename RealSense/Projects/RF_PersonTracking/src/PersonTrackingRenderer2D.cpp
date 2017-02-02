@@ -2,6 +2,20 @@
 #include "PersonTrackingUtilities.h"
 #include "pxccapture.h"
 
+/* Needed to output to console */
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+using namespace std;
+#define COUNT_WIDTH 15
+#define COLUMN_WIDTH 35
+char separator = ' ';
+int timeCounter = 0;
+
+string pointToString(float worldX, float worldY, float worldZ);
+
+
+
 PersonTrackingRenderer2D::~PersonTrackingRenderer2D()
 {
 	if (joints) {
@@ -94,13 +108,38 @@ void PersonTrackingRenderer2D::DrawSkeleton(PXCPersonTrackingData::PersonJoints*
 	}
 	personJoints->QueryJoints(joints);
 	//pxcF32
-	printf("-------Joint Set--------\n");
+	/*printf("-------Joint Set--------\n");
 	printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[0].jointType, joints[0].confidenceImage, joints[0].image.x, joints[0].image.y);
 	printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[1].jointType, joints[1].confidenceImage, joints[1].image.x, joints[1].image.y);
 	printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[2].jointType, joints[2].confidenceImage, joints[2].image.x, joints[2].image.y);
 	printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[3].jointType, joints[3].confidenceImage, joints[3].image.x, joints[3].image.y);
 	printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[4].jointType, joints[4].confidenceImage, joints[4].image.x, joints[4].image.y);
-	printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[5].jointType, joints[5].confidenceImage, joints[5].image.x, joints[5].image.y);
+	printf("  Type: %d confidenceImage:%d x: %f y: %f\n", joints[5].jointType, joints[5].confidenceImage, joints[5].image.x, joints[5].image.y);*/
+
+	/* Going to try and print out the data given by the joints */
+	/*                |       0       |       1      |    2   |        3        |       4          |     5        | */
+	/* order of joints:   LEFT_HAND   |  RIGHT HAND  |  HEAD  |  SHOULDER_LEFT  |  SHOULDER_RIGHT  |  SPINE_MID   | */
+
+	cout << left << setw(COUNT_WIDTH) << setfill(separator) << timeCounter;
+	cout << "HEAD";
+	cout << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(joints[2].world.x, joints[2].world.y, joints[2].world.z);
+	cout << "LSHOULDER";
+	cout << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(joints[3].world.x, joints[3].world.y, joints[3].world.z);
+	cout << "RSHOULDER";
+	cout << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(joints[4].world.x, joints[4].world.y, joints[4].world.z);
+	cout << "LHAND";
+	cout << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(joints[0].world.x, joints[0].world.y, joints[0].world.z);
+	cout << "RHAND";
+	cout << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(joints[1].world.x, joints[1].world.y, joints[1].world.z);
+	cout << "SPINE";
+	cout << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(joints[5].world.x, joints[5].world.y, joints[5].world.z);
+	cout << "\n";
+
+	/*printf("Head: %s  lShoulder: %s rShoulder: %s lHand: %s, rHand: %s, spine: %s\n", pointToString(joints[2].world.x, joints[2].world.y, joints[2].world.z),
+		pointToString(joints[3].world.x, joints[3].world.y, joints[3].world.z), pointToString(joints[4].world.x, joints[4].world.y, joints[4].world.z),
+		pointToString(joints[0].world.x, joints[0].world.y, joints[0].world.z), pointToString(joints[1].world.x, joints[1].world.y, joints[1].world.z),
+		pointToString(joints[5].world.x, joints[5].world.y, joints[5].world.z));*/
+
 
 
 
@@ -679,4 +718,14 @@ PXCImage* PersonTrackingRenderer2D::GetRelevantMask(PXCPersonTrackingData::Perso
 
 PXCImage* PersonTrackingRenderer2D::GetRelevantImage(PXCCapture::Sample* sample) {
 	return sample->color;
+}
+
+string pointToString(float worldX, float worldY, float worldZ) {
+	stringstream ss;
+	ss << left << setprecision(5) << setw(5) << worldX;
+	ss << left << ", ";
+	ss << left << setprecision(5) << setw(5) << worldY;
+	ss << left << ", ";
+	ss << left << setprecision(5) << setw(5) << worldZ;
+	return ss.str(); //converts stringStream to a string
 }

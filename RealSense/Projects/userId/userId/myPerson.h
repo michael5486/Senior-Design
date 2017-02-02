@@ -46,7 +46,7 @@ class myPerson{
 			JOINT_SHOULDER_LEFT = lShoulder;
 			JOINT_SHOULDER_RIGHT = rShoulder;
 			JOINT_HAND_LEFT = lHand;
-			JOINT_HAND_RIGHT = rShoulder;
+			JOINT_HAND_RIGHT = rHand;
 			JOINT_SPINE_MID = midSpine;
 			
 			personID = personCounter++;
@@ -71,7 +71,7 @@ class myPerson{
 		myPoint getLeftShoulder() { return JOINT_SHOULDER_LEFT; }
 		myPoint getRightShoulder() { return JOINT_SHOULDER_RIGHT; }
 		myPoint getLeftHand() { return JOINT_HAND_LEFT; }
-		myPoint getRightHand() { return JOINT_HAND_LEFT; }
+		myPoint getRightHand() { return JOINT_HAND_RIGHT; }
 		myPoint getSpineMid() { return JOINT_SPINE_MID; }
 };
 
