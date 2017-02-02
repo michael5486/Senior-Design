@@ -55,7 +55,7 @@ void printToLog(myPerson person);
 
 int main(int argc, WCHAR* argv[]) {
 	/* Setting up log file */
-	createLogFile("pointLogs/pointLog5.txt");
+	createLogFile("pointLogs/pointLog6.txt");
 
 	/* Creates an instance of the PXCSenseManager */
 	PXCSenseManager *pp = PXCSenseManager::CreateInstance();
@@ -225,7 +225,11 @@ void initializeTargetUser(PXCPersonTrackingModule* personModule) {
 		myPoint shoulderLeft  (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
 		myPoint shoulderRight (joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
 		myPoint spineMid      (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-		targetUser.changeJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
+		
+		PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
+		myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
+		
+		targetUser.changeJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid, myCenterMass);
 		targetUser.printPerson();
 		isInitialized = true;
 	}
@@ -275,6 +279,9 @@ void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople) {
 		PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
 		personJoints->QueryJoints(joints);
 
+		PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
+		myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
+
 
 		if (isJointInfoValid(joints) == false) {
 			//printf("Invalid joint data...\n");
@@ -286,7 +293,9 @@ void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople) {
 			myPoint leftShoulder   (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
 			myPoint rightShoulder  (joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
 			myPoint spineMid       (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-			myPerson curr = myPerson(head, leftShoulder, rightShoulder, leftHand, rightHand, spineMid);
+
+
+			myPerson curr = myPerson(head, leftShoulder, rightShoulder, leftHand, rightHand, spineMid, myCenterMass);
 			//curr.printPerson(); //can implement while testing
 			double currConf = compareTorsoAndArmLengths(curr, targetUser); //confidence that current person is user
 			printf("%d. Similarity = %.2f\n", perIter, currConf);
@@ -309,6 +318,8 @@ void createLogFile(string string) {
 	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_HAND_LEFT";
 	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_HAND_RIGHT";
 	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_SPINE_MID";
+	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_CENTER_MASS";
+
 	outputFile << "\n";
 }
 
@@ -320,6 +331,7 @@ void printToLog(myPerson newPerson) {
 	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(newPerson.getLeftHand());
 	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(newPerson.getRightHand());
 	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(newPerson.getSpineMid());
+	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(newPerson.getCenterMass());
 	outputFile << "\n";
 }
 
@@ -327,15 +339,10 @@ void printToLog(myPerson newPerson) {
 string pointToString(myPoint point) {
 	point.printPoint();
 	stringstream ss;
-<<<<<<< HEAD
-	ss << left << setprecision(5) << setw(5) << point.getWorldX();
+
+	ss << left << setprecision(5) << setw(5) << point.getImageX();
 	ss << left << ", ";
-	ss << left << setprecision(5) << setw(5) << point.getWorldY();
-=======
-	ss << left << setprecision(2) << setw(5) << point.getImageX();
-	ss << left << ", ";
-	ss << left << setprecision(2) << setw(5) << point.getImageY();
->>>>>>> 7c33bc5365adff5e754f1b40d4bbfd6629b9688c
+	ss << left << setprecision(5) << setw(5) << point.getImageY();
 	ss << left << ", ";
 	ss << left << setprecision(5) << setw(5) << point.getWorldZ();
 	return ss.str(); //converts stringStream to a string
@@ -349,6 +356,9 @@ myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* personData) {
 
 	PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
 	personJoints->QueryJoints(joints);
+
+	PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
+	myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
 	
 	/* Joint info invalid, returns null user */
 	if (isJointInfoValid(joints) == false) {
@@ -363,7 +373,7 @@ myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* personData) {
 		myPoint shoulderLeft   (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
 		myPoint shoulderRight  (joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
 		myPoint spineMid       (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-		newPerson.changeJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
+		newPerson.changeJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid,  myCenterMass);
 	}
 	timeCounter++;
 	delete[] joints;
