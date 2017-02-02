@@ -26,7 +26,6 @@ using namespace std;
 
 #define COUNT_WIDTH 15
 #define COLUMN_WIDTH 35
-
 PXCSession *session = NULL;
 
 /* Variables needed to compile */
@@ -56,7 +55,7 @@ void printToLog(myPerson person);
 
 int main(int argc, WCHAR* argv[]) {
 	/* Setting up log file */
-	createLogFile("pointLog2.txt");
+	createLogFile("pointLogs/pointLog6.txt");
 
 	/* Creates an instance of the PXCSenseManager */
 	PXCSenseManager *pp = PXCSenseManager::CreateInstance();
@@ -66,9 +65,24 @@ int main(int argc, WCHAR* argv[]) {
 		return 3;
 	}
 
-	/* Enables person tracking module */
+	/* Initiates session */
 	session = pp->QuerySession();
+	
+	/* Configures coordinate sytem to work with OpenCV */
+	session->SetCoordinateSystem(PXCSession::COORDINATE_SYSTEM_REAR_OPENCV);
+	
+	/* Enables person tracking module */
 	pp->EnablePersonTracking();
+	
+	/* Checks if coodinate system successfull switched to OpenCV mode */
+	PXCSession::CoordinateSystem cs = session->QueryCoordinateSystem();
+	if (cs & PXCSession::COORDINATE_SYSTEM_REAR_OPENCV) {
+		printf("OpenCV coordinate mode enabled...\n");
+	}
+	else {
+		printf("OpenCV mode unsuccessful...\n");
+	}
+
 
 	/* Creates stream renders */
 	UtilRender renderc(L"Color"), renderd(L"Depth");
@@ -205,13 +219,17 @@ void initializeTargetUser(PXCPersonTrackingModule* personModule) {
 	/* Joint info is valid, initialize target user */
 	else {
 		printf("Initializing target user...\n");
-		myPoint leftHand(joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
-		myPoint rightHand(joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
-		myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
-		myPoint shoulderLeft(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
-		myPoint shoulderRight(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
-		myPoint spineMid(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-		targetUser.changeJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
+		myPoint leftHand      (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
+		myPoint rightHand     (joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
+		myPoint head          (joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+		myPoint shoulderLeft  (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+		myPoint shoulderRight (joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
+		myPoint spineMid      (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
+		
+		PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
+		myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
+		
+		targetUser.changeJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid, myCenterMass);
 		targetUser.printPerson();
 		isInitialized = true;
 	}
@@ -261,18 +279,23 @@ void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople) {
 		PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
 		personJoints->QueryJoints(joints);
 
+		PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
+		myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
+
 
 		if (isJointInfoValid(joints) == false) {
 			//printf("Invalid joint data...\n");
 		}
 		else {
-			myPoint leftHand(joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
-			myPoint rightHand(joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
-			myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
-			myPoint leftShoulder(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
-			myPoint rightShoulder(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
-			myPoint spineMid(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-			myPerson curr = myPerson(head, leftShoulder, rightShoulder, leftHand, rightHand, spineMid);
+			myPoint leftHand       (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
+			myPoint rightHand      (joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
+			myPoint head           (joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+			myPoint leftShoulder   (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+			myPoint rightShoulder  (joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
+			myPoint spineMid       (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
+
+
+			myPerson curr = myPerson(head, leftShoulder, rightShoulder, leftHand, rightHand, spineMid, myCenterMass);
 			//curr.printPerson(); //can implement while testing
 			double currConf = compareTorsoAndArmLengths(curr, targetUser); //confidence that current person is user
 			printf("%d. Similarity = %.2f\n", perIter, currConf);
@@ -295,6 +318,8 @@ void createLogFile(string string) {
 	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_HAND_LEFT";
 	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_HAND_RIGHT";
 	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_SPINE_MID";
+	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_CENTER_MASS";
+
 	outputFile << "\n";
 }
 
@@ -306,43 +331,52 @@ void printToLog(myPerson newPerson) {
 	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(newPerson.getLeftHand());
 	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(newPerson.getRightHand());
 	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(newPerson.getSpineMid());
+	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << pointToString(newPerson.getCenterMass());
 	outputFile << "\n";
 }
 
 /* Returns x and y coordinates of images, z coordinate from world */
 string pointToString(myPoint point) {
+	point.printPoint();
 	stringstream ss;
-	ss << left << setprecision(2) << setw(5) << point.getImageX();
+
+	ss << left << setprecision(5) << setw(5) << point.getImageX();
 	ss << left << ", ";
-	ss << left << setprecision(2) << setw(5) << point.getImageY();
+	ss << left << setprecision(5) << setw(5) << point.getImageY();
 	ss << left << ", ";
-	ss << left << setprecision(2) << setw(5) << point.getWorldZ();
+	ss << left << setprecision(5) << setw(5) << point.getWorldZ();
 	return ss.str(); //converts stringStream to a string
 }
 
 myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* personData) {
 	assert(personData != NULL);
 	PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
+	/* Initializes null person */
+	myPerson newPerson;
 
 	PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
 	personJoints->QueryJoints(joints);
+
+	PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
+	myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
+	
+	/* Joint info invalid, returns null user */
 	if (isJointInfoValid(joints) == false) {
-		myPerson newPerson;
-		return newPerson; //returns a null person
+		printf("Converstion unsuccessful, outputting null person...\n");
 	}
-	/* Joint info is valid, initialize target user */
+	/* Joint info is valid,c changes newPerson to have valid joint data */
 	else {
-		timeCounter++;
 		printf("Conversion successful, outputting to log...\n");
-		myPoint leftHand(joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
-		myPoint rightHand(joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
-		myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
-		myPoint shoulderLeft(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
-		myPoint shoulderRight(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
-		myPoint spineMid(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-		myPerson newPerson(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid);
-		return newPerson;
+		myPoint leftHand       (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
+		myPoint rightHand      (joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
+		myPoint head           (joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+		myPoint shoulderLeft   (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+		myPoint shoulderRight  (joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
+		myPoint spineMid       (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
+		newPerson.changeJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid,  myCenterMass);
 	}
+	timeCounter++;
 	delete[] joints;
+	return newPerson;
 
 }

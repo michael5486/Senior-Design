@@ -29,6 +29,20 @@ Copyright(c) 2012-2013 Intel Corporation. All Rights Reserved.
 #include "PersonTrackingProcessor.h"
 #include "ProfileSetMap.h"
 
+
+/* Needed to output to log */
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <iomanip>
+#include <stdlib.h>
+#include <sstream>
+using namespace std;
+
+ofstream outputFile;
+
+
+
 pxcCHAR fileName[1024] = { 0 };
 PXCSession* session = NULL;
 PersonTrackingRendererManager* renderer = NULL;
@@ -39,6 +53,10 @@ HANDLE ghMutex;
 volatile bool isRunning = false;
 volatile bool isStopped = false;
 volatile bool isActiveApp = true;
+
+/* Needed in main method */
+void createLogFile(string fileName);
+
 
 
 static int controls[] = { IDC_SCALE, IDC_SEGMENT, /*IDC_MIRROR,*/ IDC_LOCATION, ID_START, ID_STOP, IDC_BLOB, IDC_RECOGNITION, ID_REGISTER, ID_UNREGISTER, 
@@ -465,6 +483,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) {
 	printf("HELLO!!! I AM THE CONSOLE!");
 	printf("Hellllloooo Worlddddd!!!!");
 
+	/* Creating a log file to output logs in */
+	//createLogFile("pointLogs/pointLog5.txt");
+
+
 	InitCommonControls();
 
 	session = PXCSession_Create();
@@ -581,4 +603,21 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int) {
 
 	session->Release();
     return (int)msg.wParam;
+}
+
+void createLogFile(string string) {
+	/*outputFile.open(string);
+
+	outputFile << "\n";
+	outputFile << "Beginning data output...";
+	outputFile << "\n\n\n";
+
+	outputFile << left << setw(COUNT_WIDTH) << setfill(separator) << "Time";
+	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_HEAD";
+	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_SHOULDER_LEFT";
+	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_SHOULDER_RIGHT";
+	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_HAND_LEFT";
+	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_HAND_RIGHT";
+	outputFile << left << setw(COLUMN_WIDTH) << setfill(separator) << "JOINT_SPINE_MID";
+	outputFile << "\n";*/
 }

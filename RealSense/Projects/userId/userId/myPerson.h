@@ -22,16 +22,18 @@ class myPerson{
 		myPoint JOINT_HAND_LEFT;
 		myPoint JOINT_HAND_RIGHT;
 		myPoint JOINT_SPINE_MID;
+		myPoint JOINT_CENTER_MASS;
 	public: 
 		//Primary Constructor
 		myPerson(myPoint head, myPoint lShoulder, myPoint rShoulder, 
-				myPoint lHand, myPoint rHand, myPoint midSpine) {
+				myPoint lHand, myPoint rHand, myPoint midSpine, myPoint cMass) {
 			JOINT_HEAD = head;
 			JOINT_SHOULDER_LEFT = lShoulder;
 			JOINT_SHOULDER_RIGHT = rShoulder;
 			JOINT_HAND_LEFT = lHand;
 			JOINT_HAND_RIGHT = rHand;
 			JOINT_SPINE_MID = midSpine;
+			JOINT_CENTER_MASS = cMass;
 			personID = personCounter++;
 			shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT);
 			leftArmLength = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT);
@@ -41,13 +43,14 @@ class myPerson{
 		}
 		//Default Constructor, sets all members to 0
 		myPerson() {
-			myPoint head, lShoulder, rShoulder, lHand, rHand, midSpine;
+			myPoint head, lShoulder, rShoulder, lHand, rHand, midSpine, cMass;
 			JOINT_HEAD = head;
 			JOINT_SHOULDER_LEFT = lShoulder;
 			JOINT_SHOULDER_RIGHT = rShoulder;
 			JOINT_HAND_LEFT = lHand;
-			JOINT_HAND_RIGHT = rShoulder;
+			JOINT_HAND_RIGHT = rHand;
 			JOINT_SPINE_MID = midSpine;
+			JOINT_CENTER_MASS = cMass;
 			
 			personID = personCounter++;
 			shoulderDistance = 0;
@@ -57,7 +60,7 @@ class myPerson{
 
 		}
 		void printPerson();
-		void changeJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
+		void changeJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
 		double calculateDistance(myPoint, myPoint);
 		myPoint calculateMidpoint(myPoint, myPoint);
 
@@ -71,18 +74,20 @@ class myPerson{
 		myPoint getLeftShoulder() { return JOINT_SHOULDER_LEFT; }
 		myPoint getRightShoulder() { return JOINT_SHOULDER_RIGHT; }
 		myPoint getLeftHand() { return JOINT_HAND_LEFT; }
-		myPoint getRightHand() { return JOINT_HAND_LEFT; }
+		myPoint getRightHand() { return JOINT_HAND_RIGHT; }
 		myPoint getSpineMid() { return JOINT_SPINE_MID; }
+		myPoint getCenterMass() { return JOINT_CENTER_MASS; }
 };
 
 /* Changes the joints for a person and the respective distance calculations */
-void myPerson::changeJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine) {
+void myPerson::changeJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine, myPoint cMass) {
 	JOINT_HEAD = head;
 	JOINT_SHOULDER_LEFT = lShoulder;
 	JOINT_SHOULDER_RIGHT = rShoulder;
 	JOINT_HAND_LEFT = lHand;
 	JOINT_HAND_RIGHT = rHand;
 	JOINT_SPINE_MID = midSpine;
+	JOINT_CENTER_MASS = cMass;
 
 	shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT);
 	leftArmLength = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT);
@@ -105,6 +110,7 @@ void myPerson::printPerson() {
 	printf("    JOINT_HAND_LEFT:      "); JOINT_HAND_LEFT.printPoint();
 	printf("    JOINT_HAND_RIGHT:     "); JOINT_HAND_RIGHT.printPoint();
 	printf("    JOINT_SPINE_MID:      "); JOINT_SPINE_MID.printPoint();
+	printf("    JOINT_CENTER_MASS:    "); JOINT_CENTER_MASS.printPoint();
 	printf("  Calculated Features:\n");
 	printf("    shoulderDistance:     %.2f\n", shoulderDistance);
 	printf("    leftArmLength:        %.2f\n", leftArmLength);
