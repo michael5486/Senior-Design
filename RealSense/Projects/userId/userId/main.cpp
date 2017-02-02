@@ -323,12 +323,19 @@ void printToLog(myPerson newPerson) {
 	outputFile << "\n";
 }
 
+/* Returns x and y coordinates of images, z coordinate from world */
 string pointToString(myPoint point) {
 	point.printPoint();
 	stringstream ss;
+<<<<<<< HEAD
 	ss << left << setprecision(5) << setw(5) << point.getWorldX();
 	ss << left << ", ";
 	ss << left << setprecision(5) << setw(5) << point.getWorldY();
+=======
+	ss << left << setprecision(2) << setw(5) << point.getImageX();
+	ss << left << ", ";
+	ss << left << setprecision(2) << setw(5) << point.getImageY();
+>>>>>>> 7c33bc5365adff5e754f1b40d4bbfd6629b9688c
 	ss << left << ", ";
 	ss << left << setprecision(5) << setw(5) << point.getWorldZ();
 	return ss.str(); //converts stringStream to a string
