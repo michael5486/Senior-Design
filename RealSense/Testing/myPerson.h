@@ -5,85 +5,120 @@
 #define RATIO_EXP_DECAY 2.31 //experimentally generated value
 #define VAL_EXP_DECAY 0.15
 
+#define INITIALIZE_COUNT_MAX 10 //number of iterations before target is initialized
+
 int personCounter = 0; //global variable, increments for each new person constructed
 
-class myPerson{
+class myPerson {
 	private:
+		int initializeCount;
 		int personID; //unneccessary using my method
-		double shoulderDistance, leftArmLength, rightArmLength, torsoHeight;
+		double shoulderDistance, leftArmLength, rightArmLength, torsoHeight; //raw shoulder values
+		//double shoulderDistanceSum, leftArmLengthSum, rightArmLengthSum, rightArmLengthSum; //continuosly updated distance values. Refined over multiple iterations
+
 		myPoint JOINT_HEAD;
 		myPoint JOINT_SHOULDER_LEFT;
 		myPoint JOINT_SHOULDER_RIGHT;
 		myPoint JOINT_HAND_LEFT;
 		myPoint JOINT_HAND_RIGHT;
 		myPoint JOINT_SPINE_MID;
+		myPoint JOINT_CENTER_MASS;
+		vector<double> torsoHeightVector;
+
 	public: 
 		//Primary Constructor
 		myPerson(myPoint head, myPoint lShoulder, myPoint rShoulder, 
-				myPoint lHand, myPoint rHand, myPoint midSpine) {
+				myPoint lHand, myPoint rHand, myPoint midSpine, myPoint cMass, boolean isTargetUser) {
 			JOINT_HEAD = head;
 			JOINT_SHOULDER_LEFT = lShoulder;
 			JOINT_SHOULDER_RIGHT = rShoulder;
 			JOINT_HAND_LEFT = lHand;
 			JOINT_HAND_RIGHT = rHand;
 			JOINT_SPINE_MID = midSpine;
+			JOINT_CENTER_MASS = cMass;
 			personID = personCounter++;
 			shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT);
 			leftArmLength = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT);
 			rightArmLength = calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT);
 			torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID);
+
+			/* If this is the target user, add a value to the torso height vector */
+			if (isTargetUser) {
+				torsoHeightVector.push_back(torsoHeight);
+			}
+
 		}
 		//Default Constructor, sets all members to 0
 		myPerson() {
-			myPoint head, lShoulder, rShoulder, lHand, rHand, midSpine;
+			myPoint head, lShoulder, rShoulder, lHand, rHand, midSpine, cMass;
 			JOINT_HEAD = head;
 			JOINT_SHOULDER_LEFT = lShoulder;
 			JOINT_SHOULDER_RIGHT = rShoulder;
 			JOINT_HAND_LEFT = lHand;
-			JOINT_HAND_RIGHT = rShoulder;
+			JOINT_HAND_RIGHT = rHand;
 			JOINT_SPINE_MID = midSpine;
+			JOINT_CENTER_MASS = cMass;
 			
 			personID = personCounter++;
 			shoulderDistance = 0;
 			leftArmLength = 0;
 			rightArmLength = 0;
-			shoulderDistance = 0;
-			leftArmLength = 0;
-			rightArmLength = 0;
-			torsoHeight = 0;
+			torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID);
 
 		}
 		void printPerson();
-		void updateJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
+		void changeJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
 		double calculateDistance(myPoint, myPoint);
 		myPoint calculateMidpoint(myPoint, myPoint);
-		
+
 		double getLeftArmLength() { return leftArmLength; }
 		double getRightArmLength() { return rightArmLength; }
 		double getTorso() { return torsoHeight; }
 		double getArmLength();
+		int getInitializeCount() { return initializeCount; }
 
 		myPoint getHead() { return JOINT_HEAD; }
 		myPoint getLeftShoulder() { return JOINT_SHOULDER_LEFT; }
 		myPoint getRightShoulder() { return JOINT_SHOULDER_RIGHT; }
 		myPoint getLeftHand() { return JOINT_HAND_LEFT; }
-		myPoint getRightHand() { return JOINT_HAND_LEFT; }
+		myPoint getRightHand() { return JOINT_HAND_RIGHT; }
 		myPoint getSpineMid() { return JOINT_SPINE_MID; }
+		myPoint getCenterMass() { return JOINT_CENTER_MASS; }
 };
 
-void myPerson::updateJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine) {
+/* Changes the joints for a person and the respective distance calculations */
+void myPerson::changeJoints(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine, myPoint cMass, boolean isTargetUser) {
 	JOINT_HEAD = head;
 	JOINT_SHOULDER_LEFT = lShoulder;
 	JOINT_SHOULDER_RIGHT = rShoulder;
 	JOINT_HAND_LEFT = lHand;
 	JOINT_HAND_RIGHT = rHand;
 	JOINT_SPINE_MID = midSpine;
+	JOINT_CENTER_MASS = cMass;
 
 	shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT);
 	leftArmLength = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT);
 	rightArmLength = calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT);
 	torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID);
 
+}
+
+ /* Changes the joints of the person, recalculates distances, and replaces distances with the median if it is the target user */
+void myPerson::updatePerson(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoint lHand, myPoint rHand, myPoint midSpine, boolean isTargetUser) {
+	JOINT_HEAD = head;
+	JOINT_SHOULDER_LEFT = lShoulder;
+	JOINT_SHOULDER_RIGHT = rShoulder;
+	JOINT_HAND_LEFT = lHand;
+	JOINT_HAND_RIGHT = rHand;
+	JOINT_SPINE_MID = midSpine;
+	JOINT_CENTER_MASS = cMass;
+
+	/* If target user, find torso height median */ 
+	if (isTargetUser) {
+		torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID);
+		torsoHeightVector.push_back(torsoHeight);
+		torsoHeight = findMedian(torsoHeightVector); 
+	}
 }
 
 void myPerson::printPerson() {
@@ -95,6 +130,7 @@ void myPerson::printPerson() {
 	printf("    JOINT_HAND_LEFT:      "); JOINT_HAND_LEFT.printPoint();
 	printf("    JOINT_HAND_RIGHT:     "); JOINT_HAND_RIGHT.printPoint();
 	printf("    JOINT_SPINE_MID:      "); JOINT_SPINE_MID.printPoint();
+	printf("    JOINT_CENTER_MASS:    "); JOINT_CENTER_MASS.printPoint();
 	printf("  Calculated Features:\n");
 	printf("    shoulderDistance:     %.2f\n", shoulderDistance);
 	printf("    leftArmLength:        %.2f\n", leftArmLength);
@@ -216,4 +252,37 @@ double compareTorsoAndArmLengths(myPerson person1, myPerson person2) {
 	//printf("Combined Similarity: %f\n", (y1 + y2) / 2);
 
 	return (y1 + y2) / 2;
+}
+
+void printVector(vector<int> vect) {
+	int i = 0;
+	for (vector<int>::iterator it = vect.begin(); it != vect.end(); it++) {
+		printf("%d  |  %d\n", i, *it);
+		i++;
+	}
+}
+
+int findMedian(vector<double> vect) {
+	sort(vect.begin(), vect.end());
+	printVector(vect);
+
+	int size = vect.size();
+
+	if (vect.empty()) { //returns -1 if vect is empty
+		return -1;
+	}
+	else if (size % 2 == 0) { //if vect contains even number of items
+		int medianLoc = size / 2;
+		int val1 = vect[medianLoc];
+		int val2 = vect[medianLoc - 1];
+		//printf("medianLoc= %d  medianLoc-1 = %d\n", medianLoc, medianLoc-1);
+		return (val1 + val2) / 2;
+
+	}
+	else { //vect contains odd # of values
+		int medianLoc = size / 2;
+		medianLoc = floor(medianLoc);
+	//	printf("medianLoc = %d\n", medianLoc);
+		return vect[medianLoc];
+	}
 }
