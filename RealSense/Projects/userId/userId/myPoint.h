@@ -21,6 +21,8 @@ class myPoint {
 		double getWorldZ() { return worldZ; }
 		double getImageX() { return imageX; }
 		double getImageY() { return imageY; }
+		
+		void setWorldZ(double);
 };
 
 void myPoint::updateValues(double newWorldX, double newWorldY, double newWorldZ, double newImageX, double newImageY) {
@@ -29,6 +31,10 @@ void myPoint::updateValues(double newWorldX, double newWorldY, double newWorldZ,
 	worldZ = newWorldZ;
 	imageX = newImageX;
 	imageY = newImageY;
+}
+
+void myPoint::setWorldZ(double newWorldZ) {
+	worldZ = newWorldZ;
 }
 
 void myPoint::printPoint() {
