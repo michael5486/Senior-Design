@@ -68,8 +68,7 @@ class myPerson{
 			shoulderDistance = 0;
 			leftArmLength = 0;
 			rightArmLength = 0;
-			torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID,0);
-			//why is this ^ in the default constructor insftead of 0?
+			torsoHeight = 0;
 
 
 		}
@@ -289,7 +288,7 @@ double compareTorsoAndArmLengths(myPerson person1, myPerson person2) {
 void printVector(vector<double> vect) {
 	int i = 0;
 	for (vector<double>::iterator it = vect.begin(); it != vect.end(); it++) {
-		printf("%f  |  %f\n", i, *it);
+		printf("%d  |  %f\n", i, *it);
 		i++;
 	}
 }

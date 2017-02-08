@@ -114,6 +114,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Header.h" />
     <ClInclude Include="myPerson.h" />
     <ClInclude Include="myPoint.h" />
   </ItemGroup>
