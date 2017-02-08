@@ -43,7 +43,7 @@ myPerson targetUser;
 bool isInitialized = false;
 
 /* Global variables for logging joint data */
-char separator = ' ';
+//char separator = ' ';
 int timeCounter = 0;
 ofstream jointLog;
 ofstream torsoLog;
@@ -68,9 +68,10 @@ void printToVectorLog(vector<double> vect,ofstream& measurement);
 int main(int argc, WCHAR* argv[]) {
 	/* Setting up log file */
 	//createJointLogFile("pointLogs/pointLog8.txt");
-	createVectorLogFile("torsoLogs/torsoLog1.txt", "torso",torsoLog);
-	createVectorLogFile("leftArmLogs/leftArmLog1.txt", "leftarm",leftArmLog);
-	createVectorLogFile("rightArmLogs/rightArmLog1.txt", "rightarm",rightArmLog);
+	createVectorLogFile("torsoLogs/torsoLog3.txt", "torso",torsoLog);
+	createVectorLogFile("leftArmLogs/leftArmLog3.txt", "leftArm",leftArmLog);
+	createVectorLogFile("rightArmLogs/rightArmLog3.txt", "rightArm",rightArmLog);
+	//createVectorLogFile("zAxisLogs/zAxisLog3.txt", "zAxis", zAxisLog);
 	
 	/* Creates an instance of the PXCSenseManager */
 	PXCSenseManager *pp = PXCSenseManager::CreateInstance();
@@ -178,8 +179,8 @@ int main(int argc, WCHAR* argv[]) {
 					else {
 						updateTargetUser(personModule);
 						printToVectorLog(targetUser.getTorsoVector(),torsoLog);
-						printToVectorLog(targetUser.getleftArmVector(),leftArmLog);
-						printToVectorLog(targetUser.getrightArmVector(),rightArmLog);
+						printToVectorLog(targetUser.getLeftArmVector(),leftArmLog);
+						printToVectorLog(targetUser.getRightArmVector(),rightArmLog);
 
 					}
 					/* Comparing people in FOV against target user */
@@ -466,9 +467,9 @@ void updateTargetUser(PXCPersonTrackingModule* personModule) {
 		myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
 
 		targetUser.updatePerson(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid, myCenterMass);
-		printf("median torsoHeight: %f\n", targetUser.getMedianTorsoHeight());
-		printf("median leftArmLength: %f\n", targetUser.getMedianleftArmLength());
-		printf("median rightArmLength: %f\n", targetUser.getMedianrightArmLength());
+		//printf("median torsoHeight: %f\n", targetUser.getMedianTorsoHeight());
+		//printf("median leftArmLength: %f\n", targetUser.getMedianLeftArmLength());
+		//printf("median rightArmLength: %f\n", targetUser.getMedianRightArmLength());
 	}
 
 
