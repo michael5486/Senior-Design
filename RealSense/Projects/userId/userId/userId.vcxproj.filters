@@ -21,7 +21,7 @@
     <ClInclude Include="myPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header.h">
+    <ClInclude Include="circlebuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
