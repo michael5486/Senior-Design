@@ -47,6 +47,8 @@ char separator = ' ';
 int timeCounter = 0;
 ofstream jointLog;
 ofstream torsoLog;
+ofstream leftArmLog;
+ofstream rightArmLog;
 
 
 /* Method declarations */
@@ -57,16 +59,18 @@ myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* person);
 void updateTargetUser(PXCPersonTrackingModule* personModule);
 
 void createJointLogFile(string fileName);
-void createVectorLogFile(string fileName, string feature);
+void createVectorLogFile(string fileName, string feature, ofstream& measurement);
 string pointToString(myPoint point);
 void printToJointLog(myPerson person);
-void printToVectorLog(vector<double> vect);
+void printToVectorLog(vector<double> vect,ofstream& measurement);
 
 
 int main(int argc, WCHAR* argv[]) {
 	/* Setting up log file */
 	//createJointLogFile("pointLogs/pointLog8.txt");
-	createVectorLogFile("torsoLogs/torsoLog1.txt", "torso");
+	createVectorLogFile("torsoLogs/torsoLog1.txt", "torso",torsoLog);
+	createVectorLogFile("leftArmLogs/leftArmLog1.txt", "leftarm",leftArmLog);
+	createVectorLogFile("rightArmLogs/rightArmLog1.txt", "rightarm",rightArmLog);
 	
 	/* Creates an instance of the PXCSenseManager */
 	PXCSenseManager *pp = PXCSenseManager::CreateInstance();
@@ -173,7 +177,9 @@ int main(int argc, WCHAR* argv[]) {
 					/* Once target user initialized, update the torso height */
 					else {
 						updateTargetUser(personModule);
-						printToVectorLog(targetUser.getTorsoVector());
+						printToVectorLog(targetUser.getTorsoVector(),torsoLog);
+						printToVectorLog(targetUser.getleftArmVector(),leftArmLog);
+						printToVectorLog(targetUser.getrightArmVector(),rightArmLog);
 
 					}
 					/* Comparing people in FOV against target user */
@@ -209,6 +215,8 @@ int main(int argc, WCHAR* argv[]) {
 	pp->Release();
 	jointLog.close();
 	torsoLog.close();
+	leftArmLog.close();
+	rightArmLog.close();
 	return 0;
 }
 
@@ -342,12 +350,11 @@ void createJointLogFile(string string) {
 }
 
 /* Creates the file to store our vector data */
-void createVectorLogFile(string fileName, string featureType) {
-	torsoLog.open(fileName);
-
-	torsoLog << "\n";
-	torsoLog << "Beginning " << featureType << " data output...";
-	torsoLog << "\n\n\n";
+void createVectorLogFile(string fileName, string featureType,ofstream& measurement) {
+	measurement.open(fileName);
+	measurement    << "\n";
+	measurement    << "Beginning " << featureType << " data output...";
+	measurement    << "\n\n\n";
 }
 
 /* Takes a myPerson as input, prints it to the joint log file */
@@ -364,21 +371,21 @@ void printToJointLog(myPerson newPerson) {
 }
 
 /* Prints the entire vector onto one line in the vector log file */
-void printToVectorLog(vector<double> vect) {
+void printToVectorLog(vector<double> vect,ofstream& measurement) {
 	
-	torsoLog << "Unsorted: ";
+	measurement << "Unsorted: ";
 	for (vector<double>::iterator it = vect.begin(); it != vect.end(); it++) {
-		torsoLog << left << setprecision(4) << setw(VECTOR_WIDTH) << setfill(separator) << *it;
+		measurement << left << setprecision(4) << setw(VECTOR_WIDTH) << setfill(separator) << *it;
 	}
-	torsoLog << "\n";
-	torsoLog << "Sorted:   ";
+	measurement << "\n";
+	measurement << "Sorted:   ";
 	sort(vect.begin(), vect.end());
 	for (vector<double>::iterator it = vect.begin(); it != vect.end(); it++) {
-		torsoLog << left << setprecision(4) << setw(VECTOR_WIDTH) << setfill(separator) << *it;
+		measurement << left << setprecision(4) << setw(VECTOR_WIDTH) << setfill(separator) << *it;
 	}
-	torsoLog << "\n median: ";
-	torsoLog << findMedian(vect);
-	torsoLog << "\n";
+	measurement << "\n median: ";
+	measurement << findMedian(vect);
+	measurement << "\n";
 
 
 }
@@ -460,6 +467,8 @@ void updateTargetUser(PXCPersonTrackingModule* personModule) {
 
 		targetUser.updatePerson(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid, myCenterMass);
 		printf("median torsoHeight: %f\n", targetUser.getMedianTorsoHeight());
+		printf("median leftArmLength: %f\n", targetUser.getMedianleftArmLength());
+		printf("median rightArmLength: %f\n", targetUser.getMedianrightArmLength());
 	}
 
 

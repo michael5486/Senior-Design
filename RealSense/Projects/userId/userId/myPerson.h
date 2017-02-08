@@ -33,6 +33,8 @@ class myPerson{
 
 		/* Vectors used for keeping track of user history */
 		vector<double> torsoHeightVector;
+		vector<double> leftArmVector;
+		vector<double> rightArmVector;
 
 	public: 
 		//Primary Constructor
@@ -46,11 +48,10 @@ class myPerson{
 			JOINT_SPINE_MID = midSpine;
 			JOINT_CENTER_MASS = cMass;
 			personID = personCounter++;
-			shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT, 0);
-			leftArmLength = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT, 0);
-			rightArmLength = calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT, 0);
-			torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID, 0);
-
+			shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT,0);
+			leftArmLength = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT,0);
+			rightArmLength = calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT,0);
+			torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID,0);
 		}
 		//Default Constructor, sets all members to 0
 		myPerson() {
@@ -67,19 +68,21 @@ class myPerson{
 			shoulderDistance = 0;
 			leftArmLength = 0;
 			rightArmLength = 0;
-			torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID, 0);
+			torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID,0);
+			//why is this ^ in the default constructor insftead of 0?
+
 
 		}
+		//method declaration
 		void printPerson();
 		void changeJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
 		void updatePerson(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
 		double calculateDistance(myPoint, myPoint, double);
 		myPoint calculateMidpoint(myPoint, myPoint);
-
+		//accessor methods
 		double getLeftArmLength() { return leftArmLength; }
 		double getRightArmLength() { return rightArmLength; }
 		double getTorso() { return torsoHeight; }
-		double getArmLength();
 		int getInitializeCount() { return initializeCount; }
 
 		myPoint getHead() { return JOINT_HEAD; }
@@ -90,8 +93,13 @@ class myPerson{
 		myPoint getSpineMid() { return JOINT_SPINE_MID; }
 		myPoint getCenterMass() { return JOINT_CENTER_MASS; }
 
-		vector<double> getTorsoVector() { return torsoHeightVector;  }
+		vector<double> getTorsoVector() { return torsoHeightVector; }
+		vector<double> getleftArmVector() { return leftArmVector; }
+		vector<double> getrightArmVector() { return rightArmVector; }
 		double getMedianTorsoHeight();
+		double getMedianleftArmLength();
+		double getMedianrightArmLength();
+		double getArmLength();
 };
 
 /* Changes the joints for a person and the respective distance calculations */
@@ -124,6 +132,11 @@ void myPerson::updatePerson(myPoint head, myPoint lShoulder, myPoint rShoulder, 
 	/* Calculate the torsoHeight in current frame, adds to torsoHeightVector */
 	torsoHeight = calculateDistance(JOINT_HEAD, JOINT_SPINE_MID, 0);
 	torsoHeightVector.push_back(torsoHeight);
+	/* Same for leftArm and rightArm*/
+	leftArmLength = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_HAND_LEFT, 0);
+	leftArmVector.push_back(leftArmLength);
+	rightArmLength = calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT, 0);
+	rightArmVector.push_back(rightArmLength);
 
 }
 
@@ -146,7 +159,7 @@ void myPerson::printPerson() {
 
 }
 
-double myPerson::calculateDistance(myPoint point1, myPoint point2, double medianZ) { //order of params doesn't matter
+double myPerson::calculateDistance(myPoint point1, myPoint point2, double medianz) { //order of params doesn't matter
 	double difX = point1.getWorldX() - point2.getWorldX();
 	double difY = point1.getWorldY() - point2.getWorldY();
 	double difZ = point1.getWorldZ() - point2.getWorldZ();
@@ -182,6 +195,7 @@ myPoint myPerson::calculateMidpoint(myPoint point1, myPoint point2) { //order of
 }
 
 /* Returns the average of rightArmLength and leftArmLength */
+//lol this method is dumb
 double myPerson::getArmLength() {
 	double leftArmLength = this->getLeftArmLength();
 	double rightArmLength = this->getRightArmLength();
@@ -204,10 +218,13 @@ double myPerson::getArmLength() {
 
 double myPerson::getMedianTorsoHeight() {
 	return findMedian(torsoHeightVector);
-
 }
-
-
+double myPerson::getMedianleftArmLength() {
+	return findMedian(leftArmVector);
+}
+double myPerson::getMedianrightArmLength() {
+	return findMedian(rightArmVector);
+}
 /* End of inherited functions needed for use in other classes. All ones below this are only used in myPerson.h */
 
 
