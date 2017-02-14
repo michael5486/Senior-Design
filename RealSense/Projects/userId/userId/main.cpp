@@ -289,7 +289,7 @@ boolean isJointInfoValid(PXCPersonTrackingData::PersonJoints::SkeletonPoint* joi
 		return false;
 	}
 
-	/* All testsed issues passed, joint info is valid */
+	/* All tested issues passed, joint info is valid */
 	return true;
 }
 
