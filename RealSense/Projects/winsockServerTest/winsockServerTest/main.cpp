@@ -25,6 +25,8 @@ void printBuffer(char[], int);
 
 int main(void)
 {
+	printf("Listening for client...\n");
+
 	WSADATA wsaData;
 	int iResult;
 
@@ -100,6 +102,8 @@ int main(void)
 	// No longer need server socket
 	closesocket(ListenSocket);
 
+
+	printf("Accepted client, waiting for data. Press q to quit...\n");
 	//server = receive
 	//client = send
 
@@ -149,16 +153,9 @@ int main(void)
 		//return 1;
 	}
 
-	// cleanup
+	// cleanup and close socket
 	closesocket(ClientSocket);
 	WSACleanup();
-
-	/*while (true) {
-		if (_kbhit()) { // Break loop
-			int c = _getch() & 255;
-			if (c == 27 || c == 'q' || c == 'Q') break; // ESC|q|Q for Exit
-		}
-	}*/
 	printf("Closing program...");
 
 	return 0;

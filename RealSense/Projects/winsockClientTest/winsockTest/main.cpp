@@ -24,7 +24,9 @@ using namespace std;
 
 #define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "27015"
-#define DEFAULT_ADDR "127.0.0.1"
+#define DEFAULT_ADDR "10.1.10.19"
+
+//#define DEFAULT_ADDR "127.0.0.1"
 
 void printBuffer(char[], int);
 
@@ -120,29 +122,26 @@ int main()
 	}*/
 
 	string inputString = "";
-	/*for (int i = 0; i < 3; i++) {
-		getline(cin, inputString);
-		cout << inputString << endl;
 
-	}*/
 
-	// Receive until the peer closes the connection
+	// Send until client terminates the connection
 	int count = 0;
 	do {
+		printf("Enter a string to send to the server: \n");
+		getline(cin, inputString);
+		const char* toSend = inputString.c_str();
 		/* iResult is the number of bytes sent */
-		iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
+		iResult = send(ConnectSocket, toSend, (int)strlen(toSend), 0);
 		printf("Bytes sent: %d\n", iResult);
 		
 		if (iResult > 0) {
-			//printf("Successfully sent...\n");
 			iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
 			printf("Bytes received: %d\n", iResult);
 			printBuffer(recvbuf, iResult);
 			count++;
 
 		}
-
-		/* 0 bytes received, so close the socket */
+		/* 0 bytes received, so end the loop */
 		else if (iResult == 0)
 			printf("Connection closed\n");
 		else
@@ -150,25 +149,19 @@ int main()
 
 	} while (iResult > 0 && count < 5);
 
-	// cleanup
-	closesocket(ConnectSocket);
-	WSACleanup();
+	// cleanup and close socket
+	printf("Press q to quit...\n");
 	while (true) {
 		if (_kbhit()) { // Break loop
 			int c = _getch() & 255;
 			if (c == 27 || c == 'q' || c == 'Q') break; // ESC|q|Q for Exit
 		}
 	}
+	closesocket(ConnectSocket);
+	WSACleanup();
 	printf("Closing program...");
-
 	return 0;
 }
-
-/*char* convertStringToCharArray(string inputString) {
-	int size = strlen(inputString);
-
-
-}*/
 
 void printBuffer(char bufPtr[], int numBytes) {
 	printf("Printing buffer...\n");
