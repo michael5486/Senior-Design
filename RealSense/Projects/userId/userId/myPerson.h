@@ -187,10 +187,12 @@ void myPerson::printPerson() {
 
 /* We are assumming all joints are on the same z plane. Will need to implement the trig here */
 double myPerson::calculateDistance(myPoint point1, myPoint point2, double medianZ) { //order of params doesn't matter
-	double difX = point1.getWorldX() - point2.getWorldX();
-	double difY = point1.getWorldY() - point2.getWorldY();
+	//double difX = point1.getWorldX() - point2.getWorldX();
+	//double difY = point1.getWorldY() - point2.getWorldY();
 	//double difZ = point1.getWorldZ() - point2.getWorldZ();
 	//double sumXYZ = pow(difX, 2) + pow(difY, 2) + pow(difZ, 2);
+	double difX = point1.getImageX() - point2.getImageX();
+	double difY = point1.getImageY() - point2.getImageY();
 	double sumXY = pow(difX, 2) + pow(difY, 2);
 	return sqrt(sumXY);
 }

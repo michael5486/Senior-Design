@@ -67,10 +67,10 @@ void printToVectorLog(vector<double> vect,ofstream& measurement);
 
 int main(int argc, WCHAR* argv[]) {
 	/* Setting up log file */
-	//createJointLogFile("pointLogs/pointLog8.txt");
-	createVectorLogFile("torsoLogs/torsoLog3.txt", "torso",torsoLog);
-	createVectorLogFile("leftArmLogs/leftArmLog3.txt", "leftArm",leftArmLog);
-	createVectorLogFile("rightArmLogs/rightArmLog3.txt", "rightArm",rightArmLog);
+	createJointLogFile("pointLogs/pointLog14.txt");
+	createVectorLogFile("torsoLogs/torsoLog14.txt", "torso",torsoLog);
+	createVectorLogFile("leftArmLogs/leftArmLog14.txt", "leftArm",leftArmLog);
+	createVectorLogFile("rightArmLogs/rightArmLog14.txt", "rightArm",rightArmLog);
 	//createVectorLogFile("zAxisLogs/zAxisLog3.txt", "zAxis", zAxisLog);
 	
 	/* Creates an instance of the PXCSenseManager */
@@ -181,6 +181,9 @@ int main(int argc, WCHAR* argv[]) {
 						printToVectorLog(targetUser.getTorsoVector(),torsoLog);
 						printToVectorLog(targetUser.getLeftArmVector(),leftArmLog);
 						printToVectorLog(targetUser.getRightArmVector(),rightArmLog);
+						PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
+						printToJointLog(convertPXCPersonToMyPerson(personData));
+
 
 					}
 					/* Comparing people in FOV against target user */
@@ -416,7 +419,7 @@ myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* personData) {
 	personJoints->QueryJoints(joints);
 
 	PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
-	myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
+	myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y * 1000);
 	
 	/* Joint info invalid, returns null user */
 	if (isJointInfoValid(joints) == false) {

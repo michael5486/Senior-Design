@@ -24,7 +24,7 @@ using namespace std;
 
 #define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "27015"
-#define DEFAULT_ADDR "10.1.10.19"
+#define DEFAULT_ADDR "10.1.10.69"
 
 //#define DEFAULT_ADDR "127.0.0.1"
 
