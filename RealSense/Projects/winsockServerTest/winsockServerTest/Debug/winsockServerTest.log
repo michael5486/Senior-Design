@@ -1,4 +1,2 @@
-﻿  main.cpp
-c:\users\michael\desktop\senior-design\realsense\projects\winsockservertest\winsockservertest\main.cpp(39): warning C4101: 'iSendResult': unreferenced local variable
-  winsockServerTest.vcxproj -> C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\winsockServerTest\Debug\winsockServerTest.exe
-  winsockServerTest.vcxproj -> C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\winsockServerTest\Debug\winsockServerTest.pdb (Partial PDB)
+﻿  winsockServerTest.vcxproj -> C:\Users\Asus\Desktop\Senior-Design\RealSense\Projects\winsockServerTest\Debug\winsockServerTest.exe
+  winsockServerTest.vcxproj -> C:\Users\Asus\Desktop\Senior-Design\RealSense\Projects\winsockServerTest\Debug\winsockServerTest.pdb (Partial PDB)
