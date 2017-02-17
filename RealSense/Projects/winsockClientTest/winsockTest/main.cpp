@@ -24,9 +24,9 @@ using namespace std;
 
 #define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "27015"
-#define DEFAULT_ADDR "10.1.10.69"
+//#define DEFAULT_ADDR "10.1.10.69"
 
-//#define DEFAULT_ADDR "127.0.0.1"
+#define DEFAULT_ADDR "127.0.0.1"
 
 void printBuffer(char[], int);
 
@@ -41,6 +41,8 @@ int main()
 	char recvbuf[DEFAULT_BUFLEN];
 	int iResult;
 	int recvbuflen = DEFAULT_BUFLEN;
+
+
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -74,6 +76,11 @@ int main()
 			return 1;
 		}
 
+		/* setting timeout for receiving over TCPIP */
+		timeval tv;
+		tv.tv_sec = 2; /* 2 sec timeout */
+		setsockopt(ConnectSocket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(struct timeval));
+
 		// Connect to server.
 		iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
 		if (iResult == SOCKET_ERROR) {
@@ -106,10 +113,20 @@ int main()
 
 	printf("Bytes Sent: %ld\n", iResult);
 
+
+	printf("Waiting for initial response...\n");
 	//Receives initial response
 	iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-	printf("Bytes received: %d\n", iResult);
-	printBuffer(recvbuf, iResult);
+
+
+	if (iResult <0 ) {
+		printf("Mutha...fuckin...error...\n");
+	}
+	else {
+		printf("Bytes received: %d\n", iResult);
+		printBuffer(recvbuf, iResult);
+	}
+
 
 
 	// shutdown the connection since no more data will be sent
@@ -136,18 +153,25 @@ int main()
 		
 		if (iResult > 0) {
 			iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-			printf("Bytes received: %d\n", iResult);
-			printBuffer(recvbuf, iResult);
-			count++;
+			if (iResult < 0) {
+				printf("error :(\n");
+			}
+			else {
+				printf("Bytes received: %d\n", iResult);
+				printBuffer(recvbuf, iResult);
+			}
 
 		}
 		/* 0 bytes received, so end the loop */
-		else if (iResult == 0)
-			printf("Connection closed\n");
-		else
+		/*else if (iResult == 0)
+			printf("Connection closed\n");*/
+		else {
 			printf("recv failed with error: %d\n", WSAGetLastError());
+		}
+		count++;
 
-	} while (iResult > 0 && count < 5);
+
+	} while (/*iResult > 0 && */count < 5);
 
 	// cleanup and close socket
 	printf("Press q to quit...\n");
