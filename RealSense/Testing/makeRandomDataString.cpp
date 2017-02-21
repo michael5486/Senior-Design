@@ -23,7 +23,7 @@ int main() {
 string makeRandomString() {
 	stringstream ss;
 
-	ss << left << rand() % 340;
+	ss << left << rand() % 320;
 	ss << left << " ";
 	ss << left << rand() % 240;
 

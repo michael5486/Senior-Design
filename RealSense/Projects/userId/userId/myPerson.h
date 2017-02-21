@@ -19,6 +19,9 @@ int personCounter = 0; //global variable, increments for each new person constru
 /* Function declarations */
 double findMedian(vector<double>);
 double findMedianForZ(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
+double convertToInches(double, double);
+
+
 
 /* Needed for logging purposes */
 char separator = ' ';
@@ -191,8 +194,10 @@ double myPerson::calculateDistance(myPoint point1, myPoint point2, double median
 	//double difY = point1.getWorldY() - point2.getWorldY();
 	//double difZ = point1.getWorldZ() - point2.getWorldZ();
 	//double sumXYZ = pow(difX, 2) + pow(difY, 2) + pow(difZ, 2);
-	double difX = point1.getImageX() - point2.getImageX();
-	double difY = point1.getImageY() - point2.getImageY();
+	double difPixelsX = point1.getImageX() - point2.getImageX();
+	double difInchesX = convertToInches(difPixelsX, medianZ);
+	double difPixelsY = point1.getImageY() - point2.getImageY();
+	double difInchesY = convertToInches(difPixelsY, medianZ);
 	double sumXY = pow(difX, 2) + pow(difY, 2);
 	return sqrt(sumXY);
 }
@@ -376,6 +381,16 @@ double findMedianForZ(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoin
 	cout << "     median = " << zValues[3];
 	cout << "\n";
 	return zValues[3];
+}
+
+
+/* Input distance between two points in image, uses Z axis distance to scale pixel difference to inch difference.
+   Created using experimentally generated values */
+double convertToInches(double zAxisInRSU, double pixelDistance) {
+
+	double inchesPerPixel = 0.000119 * zAxisInRSU + 0.00308;
+	return inchesPerPixel * pixelDistance;
+
 }
 
 
