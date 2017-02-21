@@ -29,8 +29,9 @@ using namespace std;
 #define DEFAULT_ADDR "127.0.0.1"
 
 void printBuffer(char[], int);
+void makeRandomString();
 
-
+	
 }
 
 int main()
@@ -147,9 +148,10 @@ int main()
 	// Send until client terminates the connection
 	int count = 0;
 	do {
-		printf("Enter a string to send to the server: \n");
-		getline(cin, inputString);
-		const char* toSend = inputString.c_str();
+		/*printf("Enter a string to send to the server: \n");
+		getline(cin, inputString);*/
+
+		const char* toSend = makeRandomString.c_str();
 		/* iResult is the number of bytes sent */
 		iResult = send(ConnectSocket, toSend, (int)strlen(toSend), 0);
 		printf("Bytes sent: %d\n", iResult);
@@ -198,8 +200,12 @@ void printBuffer(char bufPtr[], int numBytes) {
 	printf("\n");
 }
 
+string makeRandomString() {
+	stringstream ss;
 
-makeRandomString() {
+	ss << left << rand() % 340;
+	ss << left << " ";
+	ss << left << rand() % 240;
 
-
+	return ss.str();
 }
