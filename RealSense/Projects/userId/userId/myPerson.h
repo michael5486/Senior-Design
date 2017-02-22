@@ -54,6 +54,7 @@ class myPerson{
 		vector<double> torsoHeightVector;
 		vector<double> leftArmVector;
 		vector<double> rightArmVector;
+		vector<double> shoulderVector;
 		//vector<double> zValues;
 
 	public: 
@@ -96,16 +97,17 @@ class myPerson{
 
 
 		}
-		//method declaration
+		/* method declarations */
 		void printPerson();
 		void changeJoints(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
 		void updatePerson(myPoint, myPoint, myPoint, myPoint, myPoint, myPoint, myPoint);
 		double calculateDistance(myPoint, myPoint, double);
 		myPoint calculateMidpoint(myPoint, myPoint);
-		//accessor methods
+		/* accessor methods */
 		double getLeftArmLength() { return leftArmLength; }
 		double getRightArmLength() { return rightArmLength; }
 		double getTorso() { return torsoHeight; }
+		double getShoulderDistance() { return shoulderDistance; }
 		int getInitializeCount() { return initializeCount; }
 	//	void initializeVectorLog(ofstream&);
 
@@ -123,6 +125,7 @@ class myPerson{
 		double getMedianTorsoHeight();
 		double getMedianLeftArmLength();
 		double getMedianRightArmLength();
+		double getMedianShoulderDistance();
 		double getArmLength();
 };
 
@@ -166,6 +169,8 @@ void myPerson::updatePerson(myPoint head, myPoint lShoulder, myPoint rShoulder, 
 	leftArmVector.push_back(leftArmLength);
 	rightArmLength = calculateDistance(JOINT_SHOULDER_RIGHT, JOINT_HAND_RIGHT, medianZ);
 	rightArmVector.push_back(rightArmLength);
+	shoulderDistance = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT, medianZ);
+	shoulderVector.push_back(shoulderDistance);
 
 }
 
@@ -198,7 +203,7 @@ double myPerson::calculateDistance(myPoint point1, myPoint point2, double median
 	double difInchesX = convertToInches(difPixelsX, medianZ);
 	double difPixelsY = point1.getImageY() - point2.getImageY();
 	double difInchesY = convertToInches(difPixelsY, medianZ);
-	double sumXY = pow(difX, 2) + pow(difY, 2);
+	double sumXY = pow(difInchesX, 2) + pow(difInchesY, 2);
 	return sqrt(sumXY);
 }
 
@@ -260,17 +265,26 @@ double myPerson::getMedianLeftArmLength() {
 double myPerson::getMedianRightArmLength() {
 	return findMedian(rightArmVector);
 }
+double myPerson::getMedianShoulderDistance() {
+	return findMedian(shoulderVector);
+}
 /* End of inherited functions needed for use in other classes. All ones below this are only used in myPerson.h */
 
 
-/* Compares person1 against person2. Order doesn't matter 
+/* Compares person1 against target user, assuming target user is second parameter
    returns value 100 if ratios are identical, with expnentially decreasing values as they get more different
    y  = 100e^(-2.31*x)
    x = | ratio1 - ratio 2 | */
-double compareTorsoRatio(myPerson person1, myPerson person2) {
+double compareTorsoRatio(myPerson person1, myPerson targetUser) {
 	
-	double ratio1 = person1.getTorso() / person1.getArmLength();
-	double ratio2 = person2.getTorso() / person2.getArmLength();
+	//double ratio1 = person1.getTorso() / person1.getArmLength();
+	//double ratio2 = person2.getTorso() / person2.getArmLength();
+
+	double ratio1 = person1.getTorso() / person1.getShoulderDistance();
+	//printf("person1Torso = %f person1Shoulder = %f\n", person1.getTorso(), person1.getShoulderDistance());
+	double ratio2 = targetUser.getMedianTorsoHeight() / targetUser.getMedianShoulderDistance();
+	//printf("targetUserTorso = %f targetUserShoulder = %f\n", targetUser.getMedianTorsoHeight(), targetUser.getMedianShoulderDistance());
+
 
 	double x = fabs(ratio1 - ratio2);
 
@@ -288,13 +302,16 @@ double compareTorsoRatio(myPerson person1, myPerson person2) {
    returns value between 0 and 100. 100 means that values are identical	*/
 double compareTorsoAndArmLengths(myPerson person1, myPerson person2) {
 
-	double arm1 = person1.getArmLength();
-	double arm2 = person2.getArmLength();
+	//double arm1 = person1.getArmLength();
+	//double arm2 = person2.getArmLength();
+	double shoulder1 = person1.getShoulderDistance();
+	double shoulder2 = person2.getShoulderDistance();
+
 
 	double torso1 = person1.getTorso();
 	double torso2 = person2.getTorso();
 
-	double x1 = fabs(arm1 - arm2);
+	double x1 = fabs(shoulder1 - shoulder2);
 	double neg = -1 * VAL_EXP_DECAY * x1;
 
 	double eToPower = pow(e, neg);
@@ -350,7 +367,7 @@ double findMedian(vector<double> vect) {
 
 	}
 	else { //vect contains odd # of values
-		int medianLoc = size / 2;
+		double medianLoc = size / 2;
 		//printf("medianLoc = %d", medianLoc);
 		medianLoc = floor(medianLoc);
 		//	printf("medianLoc = %d\n", medianLoc);
@@ -368,7 +385,7 @@ double findMedianForZ(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoin
 	zValues.push_back(rHand.getWorldZ());
 	zValues.push_back(spineMid.getWorldZ());
 	zValues.push_back(cMass.getWorldZ() * 1000); //for some reason, cMass is reported in different units
-	cout << "\n  Unsorted:  ";
+	/*cout << "\n  Unsorted:  ";
 	for (vector<double>::iterator it = zValues.begin(); it != zValues.end(); it++) {
 		cout << left << setprecision(4) << setw(VECTOR_WIDTH) << setfill(separator) << *it;
 	}
@@ -379,7 +396,7 @@ double findMedianForZ(myPoint head, myPoint lShoulder, myPoint rShoulder, myPoin
 		cout << left << setprecision(4) << setw(VECTOR_WIDTH) << setfill(separator) << *it;
 	}
 	cout << "     median = " << zValues[3];
-	cout << "\n";
+	cout << "\n";*/
 	return zValues[3];
 }
 

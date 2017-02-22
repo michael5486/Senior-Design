@@ -1,5 +1,5 @@
 ﻿  main.cpp
-c:\users\michael\desktop\senior-design\realsense\projects\userid\userid\myperson.h(332): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\michael\desktop\senior-design\realsense\projects\userid\userid\myperson.h(350): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+c:\users\michael\desktop\senior-design\realsense\projects\userid\userid\myperson.h(354): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\michael\desktop\senior-design\realsense\projects\userid\userid\myperson.h(374): warning C4244: 'argument': conversion from 'double' to 'unsigned __int64', possible loss of data
   userId.vcxproj -> C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\userId\x64\Debug\userId.exe
   userId.vcxproj -> C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\userId\x64\Debug\userId.pdb (Partial PDB)
