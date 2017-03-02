@@ -41,6 +41,8 @@ volatile bool isStopped = false;
 /* Global variables used in target identification */
 myPerson targetUser;
 bool isInitialized = false;
+//vector<int> personList;
+int numPeopleFound = -1;
 
 /* Global variables for logging joint data */
 //char separator = ' ';
@@ -57,6 +59,7 @@ boolean isJointInfoValid(PXCPersonTrackingData::PersonJoints::SkeletonPoint* joi
 void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople);
 myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* person);
 void updateTargetUser(PXCPersonTrackingModule* personModule);
+boolean isNewUser(PXCPersonTrackingModule *personModule);
 
 void createJointLogFile(string fileName);
 void createVectorLogFile(string fileName, string feature, ofstream& measurement);
@@ -143,13 +146,13 @@ int main(int argc, WCHAR* argv[]) {
 		//printf("is jointTracking Enabled?: %d\n", skeletonJoints->IsEnabled());
 
 
-		printf("Initializing stream...");
+		printf("Initializing stream...\n");
 		/* Stream Data */
 		while (true) {
 			/* Waits until new frame is available and locks it for application processing */
 			sts = pp->AcquireFrame(false);
 
-			/* Render streams*/
+			/* Render streams */
 			PXCCapture::Sample *sample = pp->QuerySample();
 
 			if (sample) {
@@ -178,9 +181,11 @@ int main(int argc, WCHAR* argv[]) {
 					/* Once target user initialized, update the torso height */
 					else {
 						updateTargetUser(personModule);
-						
-						/* Comparing people in FOV against target user */
-						comparePeopleInFOV(personModule, numPeople);
+						if (isNewUser(personModule)) {
+							/* Comparing people in FOV against target user */
+							comparePeopleInFOV(personModule, numPeople);
+						}
+
 						
 						/* printing information to log files */
 						//printToVectorLog(targetUser.getTorsoVector(),torsoLog);
@@ -269,13 +274,14 @@ boolean isJointInfoValid(PXCPersonTrackingData::PersonJoints::SkeletonPoint* joi
 		return false;
 		printf("Garbage data...\n");
 	}
+	/*Hands not crucial for current comparison methodology */
 	if (joints[0].image.x == 0 && joints[0].image.y == 0) { //no image coordinates for left hand, skips initialization
-		printf("Invalid left hand...\n");
-		return false;
+		//printf("Invalid left hand...\n");
+		//return false;
 	}
 	if (joints[1].image.x == 0 && joints[1].image.y == 0) { //no image coordinates for right hand, skips initialization
-		printf("Invalid right hand...\n");
-		return false;
+		//printf("Invalid right hand...\n");
+		//return false;
 	}
 	if (joints[3].image.x == 0 && joints[3].image.y == 0) { //no image coordinates for left shoulder, skips initialization
 		printf("Invalid left shoulder...\n");
@@ -308,7 +314,7 @@ void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople) {
 
 
 		if (isJointInfoValid(joints) == false) {
-			//printf("Invalid joint data...\n");
+			printf("Invalid joint data...no comparison\n");
 		}
 		else {
 			myPoint leftHand        (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
@@ -469,3 +475,29 @@ void updateTargetUser(PXCPersonTrackingModule* personModule) {
 
 
 }
+
+
+/* Determines if persons seen in the camera have been seen before */
+boolean isNewUser(PXCPersonTrackingModule *personModule) {
+
+	//PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
+
+	int numPersons = personModule->QueryOutput()->QueryNumberOfPeople();
+	//int numPersons = personModulepersonData->QueryNumberOfPeople(); //returns number of people
+
+	for (int i = 0; i < numPersons; i++) {
+		PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, i);
+
+		/* Finds the unique ID of each user */
+		int uniqueID = personData->QueryTracking()->QueryId();
+		//printf("uniqueID = %d numPeople=%d", uniqueID, numPeopleFound);
+		/* If assigned ID greater than numPeopleFound, person hasn't been seen before */
+		if (uniqueID > numPeopleFound) {
+			printf("New user found ID = %d\n", uniqueID);
+			numPeopleFound++;
+			return true;
+		}
+	}
+	return false;
+}
+	
