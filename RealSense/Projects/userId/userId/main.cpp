@@ -5,7 +5,7 @@
 #include "pxcmetadata.h"
 #include "util_cmdline.h"
 #include "util_render.h"
-#include <conio.h>
+#include <conio.h> //for _getch
 #include "pxcpersontrackingmodule.h"
 #include "pxcpersontrackingdata.h"
 #include "pxcvideomodule.h"
