@@ -124,8 +124,6 @@ DWORD WINAPI updateTable(LPVOID lpParam)
 		Sleep(500); //runs every 2 seconds
 		printTable(true, 0.0); //prints all the persons in the table
 
-
-
 	}
 
 
@@ -197,7 +195,6 @@ void createOutputTable() {
 void printTable(bool targetFound, double targetUserVal) {
 
 	//need to set cursor position before writing to screen
-
 	if (targetFound == false) {
 		COORD cursorPos = { 2, 1 };
 		SetConsoleCursorPosition(wHnd, cursorPos);
@@ -214,7 +211,6 @@ void printTable(bool targetFound, double targetUserVal) {
 		SetConsoleCursorPosition(wHnd, cursorPos);
 		printf("person %d:     %.1f", personCount, personsFound.at(personCount));
 	}
-
 }
 
 void ErrorHandler(LPTSTR lpszFunction)

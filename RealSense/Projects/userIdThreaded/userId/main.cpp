@@ -24,6 +24,10 @@
 #include <stdlib.h>
 #include <sstream>
 
+/* For threading */
+#include <strsafe.h>
+
+
 using namespace std;
 
 
@@ -38,8 +42,7 @@ volatile bool isStopped = false;
 /* Global variables used in target identification */
 myPerson targetUser;
 bool isInitialized = false;
-//vector<int> personList;
-int numPeopleFound = -1;
+//int numPeopleFound = -1;
 
 /* Global variables for logging joint data */
 //char separator = ' ';
@@ -49,6 +52,14 @@ ofstream torsoLog;
 ofstream leftArmLog;
 ofstream rightArmLog;
 
+/* Global variables for the table */
+HANDLE wHnd;    // Handle to write to the console.
+HANDLE rHnd;    // Handle to read from the console.
+int consoleWidth = 60;
+int consoleHeight = 20;
+vector<PXCPersonTrackingData::Person*> personsFound;
+
+
 
 /* Method declarations */
 void initializeTargetUser(PXCPersonTrackingModule* personModule);
@@ -56,6 +67,12 @@ void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople);
 myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* person);
 void updateTargetUser(PXCPersonTrackingModule* personModule);
 boolean isNewUser(PXCPersonTrackingModule *personModule);
+void createOutputTable();
+void printTable(bool, double);
+void ErrorHandler(LPTSTR lpszFunction);
+DWORD WINAPI updateTable(LPVOID);
+
+
 
 
 int main(int argc, WCHAR* argv[]) {
@@ -86,10 +103,10 @@ int main(int argc, WCHAR* argv[]) {
 	/* Checks if coodinate system successfull switched to OpenCV mode */
 	PXCSession::CoordinateSystem cs = session->QueryCoordinateSystem();
 	if (cs & PXCSession::COORDINATE_SYSTEM_REAR_OPENCV) {
-		printf("OpenCV coordinate mode enabled...\n");
+		//printf("OpenCV coordinate mode enabled...\n");
 	}
 	else {
-		printf("OpenCV mode unsuccessful...\n");
+		//printf("OpenCV mode unsuccessful...\n");
 	}
 
 
@@ -135,8 +152,22 @@ int main(int argc, WCHAR* argv[]) {
 		skeletonJoints->Enable();
 		//printf("is jointTracking Enabled?: %d\n", skeletonJoints->IsEnabled());
 
+		/* Create thread to write values to the table */
+		HANDLE threadSuccess;
+		DWORD   dwThreadId;
 
-		printf("Initializing stream...\n");
+		threadSuccess = CreateThread(NULL, 0, updateTable, NULL, 0, &dwThreadId);
+
+		if (threadSuccess == NULL)
+		{
+			ErrorHandler(TEXT("CreateThread"));
+			ExitProcess(3);
+		}
+
+		/* Creates the formatting and handles for our output table */
+		createOutputTable();
+
+		//printf("Initializing stream...\n");
 		/* Stream Data */
 		while (true) {
 			/* Waits until new frame is available and locks it for application processing */
@@ -349,13 +380,144 @@ boolean isNewUser(PXCPersonTrackingModule *personModule) {
 		/* Finds the unique ID of each user */
 		int uniqueID = personData->QueryTracking()->QueryId();
 		//printf("uniqueID = %d numPeople=%d", uniqueID, numPeopleFound);
-		/* If assigned ID greater than numPeopleFound, person hasn't been seen before */
-		if (uniqueID > numPeopleFound) {
+
+		/* If assigned ID greater than the size of personFound, person hasn't been seen before */
+		if (uniqueID > personsFound.size()) {
 			printf("New user found ID = %d\n", uniqueID);
-			numPeopleFound++;
+			//numPeopleFound++;
+			/* Adding the new personData to our history of persons found */
+			personsFound.push_back(personData);
 			return true;
 		}
 	}
 	return false;
 }
 	
+void createOutputTable() {
+	/* Set up the handles for reading/writing */
+	wHnd = GetStdHandle(STD_OUTPUT_HANDLE);
+	rHnd = GetStdHandle(STD_INPUT_HANDLE);
+
+	/* Change the window title */
+	SetConsoleTitle(TEXT("userID"));
+
+	/* Set up the required window size */
+	SMALL_RECT windowSize = { 0, 0, consoleHeight - 1, consoleWidth - 1 };
+
+	/* Change the console window size */
+	SetConsoleWindowInfo(wHnd, TRUE, &windowSize);
+
+	/* Create a COORD to hold the buffer size */
+	COORD bufferSize = { consoleHeight, consoleWidth };
+
+	/* Change the internal buffer size */
+	SetConsoleScreenBufferSize(wHnd, bufferSize);
+
+	// Set up the character:
+	CHAR_INFO border;
+	border.Char.AsciiChar = '*';
+	border.Attributes = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+
+	// Set up the positions:
+
+	for (int i = 0; i < consoleWidth; i++) {  //makes top border
+		COORD charBufSize = { 1,1 };
+		COORD characterPos = { 0 ,0 }; //draws in top left of buffer
+		SMALL_RECT writeArea = { i,0,i,0 }; //top left coordinates, bottom right coordinates of drawing area
+											// Write the character:
+		WriteConsoleOutputA(wHnd, &border, charBufSize, characterPos, &writeArea);
+	}
+
+	for (int i = 0; i < consoleWidth; i++) { //makes bottom border
+		COORD charBufSize = { 1,1 };
+		COORD characterPos = { 0 ,0 }; //draws in top left of buffer
+		SMALL_RECT writeArea = { i,consoleHeight,i,consoleHeight }; //top left coordinates, bottom right coordinates of drawing area
+																	// Write the character:
+		WriteConsoleOutputA(wHnd, &border, charBufSize, characterPos, &writeArea);
+	}
+
+	for (int i = 0; i < consoleHeight; i++) { //makes left border
+		COORD charBufSize = { 1,1 };
+		COORD characterPos = { 0 ,0 }; //draws in top left of buffer
+		SMALL_RECT writeArea = { 0,i,0,i }; //top left coordinates, bottom right coordinates of drawing area
+											// Write the character:
+		WriteConsoleOutputA(wHnd, &border, charBufSize, characterPos, &writeArea);
+	}
+
+	for (int i = 0; i <= consoleHeight; i++) { //makes right border
+		COORD charBufSize = { 1,1 };
+		COORD characterPos = { 0 ,0 }; //draws in top left of buffer
+		SMALL_RECT writeArea = { consoleWidth,i,consoleWidth,i }; //top left coordinates, bottom right coordinates of drawing area
+																  // Write the character:
+		WriteConsoleOutputA(wHnd, &border, charBufSize, characterPos, &writeArea);
+	}
+
+}
+
+/* Parameter is void, can be any data type or no data at all. This function is executed by the thread */
+DWORD WINAPI updateTable(LPVOID lpParam)
+{
+
+	for (int i = 0; i < 10000; i++) {
+
+		Sleep(500); //runs every 2 seconds
+		printTable(true, 0.0); //prints all the persons in the table
+
+	}
+	return 0;
+}
+
+void printTable(bool targetFound, double targetUserVal) {
+
+	//need to set cursor position before writing to screen
+	if (targetFound == false) {
+		COORD cursorPos = { 2, 1 };
+		SetConsoleCursorPosition(wHnd, cursorPos);
+		printf("TargetUser:    N/A");
+	}
+	else {
+		COORD cursorPos = { 2, 1 };
+		SetConsoleCursorPosition(wHnd, cursorPos);
+		printf("TargetUser:    %.1f", targetUserVal);
+	}
+
+	for (int personCount = 0; personCount < personsFound.size(); personCount++) {
+		COORD cursorPos = { 2, personCount + 3 };
+		SetConsoleCursorPosition(wHnd, cursorPos);
+		printf("person %d:     %.1f", personCount, personsFound.at(personCount));
+	}
+}
+
+void ErrorHandler(LPTSTR lpszFunction)
+{
+	// Retrieve the system error message for the last-error code.
+
+	LPVOID lpMsgBuf;
+	LPVOID lpDisplayBuf;
+	DWORD dw = GetLastError();
+
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		dw,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf,
+		0, NULL);
+
+	// Display the error message.
+
+	lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT,
+		(lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR));
+	StringCchPrintf((LPTSTR)lpDisplayBuf,
+		LocalSize(lpDisplayBuf) / sizeof(TCHAR),
+		TEXT("%s failed with error %d: %s"),
+		lpszFunction, dw, lpMsgBuf);
+	MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
+
+	// Free error-handling buffer allocations.
+
+	LocalFree(lpMsgBuf);
+	LocalFree(lpDisplayBuf);
+}
