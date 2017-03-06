@@ -118,9 +118,7 @@ int main()
 DWORD WINAPI updateTable(LPVOID lpParam)
 {
 	
-	for (int i = 0; i < 10000; i++) {
-
-
+	while(personsFound.size() > 0) { //runs as long as the targetUser is found
 		Sleep(500); //runs every 2 seconds
 		printTable(true, 0.0); //prints all the persons in the table
 
@@ -195,7 +193,7 @@ void createOutputTable() {
 void printTable(bool targetFound, double targetUserVal) {
 
 	//need to set cursor position before writing to screen
-	if (targetFound == false) {
+	/*if (targetFound == false) {
 		COORD cursorPos = { 2, 1 };
 		SetConsoleCursorPosition(wHnd, cursorPos);
 		printf("TargetUser:    N/A");
@@ -204,7 +202,7 @@ void printTable(bool targetFound, double targetUserVal) {
 		COORD cursorPos = { 2, 1 };
 		SetConsoleCursorPosition(wHnd, cursorPos);
 		printf("TargetUser:    %.1f", targetUserVal);
-	}
+	}*/
 
 	for (int personCount = 0; personCount < personsFound.size(); personCount++) {
 		COORD cursorPos = { 2, personCount + 3 };
