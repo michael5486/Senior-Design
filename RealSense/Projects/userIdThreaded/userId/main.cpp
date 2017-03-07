@@ -55,6 +55,7 @@ ofstream rightArmLog;
 /* Global variables for the table */
 HANDLE wHnd;    // Handle to write to the console.
 HANDLE rHnd;    // Handle to read from the console.
+HANDLE threadSuccess; //Handle to control output table thread
 int consoleWidth = 60;
 int consoleHeight = 20;
 vector<PXCPersonTrackingData::Person*> personsFound;
@@ -175,6 +176,13 @@ int main(int argc, WCHAR* argv[]) {
 					if (sample->depth && !renderd.RenderFrame(sample->depth)) break;
 					if (sample->color && !renderc.RenderFrame(sample->color)) break;
 					pp->ReleaseFrame();
+					
+					//printf("no Person");
+
+					/* Target user already found, disappeared from FOV */
+					if (personsFound.size() > 0) {
+						(personsFound[0]) = NULL;
+					}
 					continue;
 				}
 
@@ -187,20 +195,16 @@ int main(int argc, WCHAR* argv[]) {
 					if (isInitialized == false) {
 						initializeTargetUser(personModule);
 						//printf("Still initializing user...\n");
-
 					}
 					/* Once target user initialized, update the torso height */
 					else {
-						if (numPeople == 0) { //target user disappeared
-							personsFound[0] = NULL;
+
+						updateTargetUser(personModule);
+						if (isNewUser(personModule)) {
+							/* Comparing people in FOV against target user */
+							comparePeopleInFOV(personModule, numPeople);
 						}
-						else {
-							updateTargetUser(personModule);
-							if (isNewUser(personModule)) {
-								/* Comparing people in FOV against target user */
-								comparePeopleInFOV(personModule, numPeople);
-							}
-						}
+					}
 
 
 						
@@ -208,11 +212,10 @@ int main(int argc, WCHAR* argv[]) {
 						//printToVectorLog(targetUser.getTorsoVector(),torsoLog);
 						//printToVectorLog(targetUser.getLeftArmVector(),leftArmLog);
 						//printToVectorLog(targetUser.getRightArmVector(),rightArmLog);
-						PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
+						//PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
 						//printToJointLog(convertPXCPersonToMyPerson(personData));
 
 
-					}
 				}
 			}
 
@@ -237,6 +240,7 @@ int main(int argc, WCHAR* argv[]) {
 	torsoLog.close();
 	leftArmLog.close();
 	rightArmLog.close();
+	CloseHandle(threadSuccess); //closes table output thread
 	return 0;
 }
 
@@ -247,7 +251,7 @@ int main(int argc, WCHAR* argv[]) {
 
 
 /* We should average our tracked joints over 5 seconds or something, removing outliers (median calculated values),
-initializing shouldn't occur in one frame*/
+initializing shouldn't occur in one frame */
 void initializeTargetUser(PXCPersonTrackingModule* personModule) {
 	/* Accesses the only person in camera's FOV, our target user */
 	PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
@@ -283,7 +287,6 @@ void initializeTargetUser(PXCPersonTrackingModule* personModule) {
 		personsFound.push_back(personData); //puts first data into personsFound vector
 
 		/* Create thread to write values to the table */
-		HANDLE threadSuccess;
 		DWORD   dwThreadId;
 		threadSuccess = CreateThread(NULL, 0, updateTable, NULL, 0, &dwThreadId);
 
@@ -474,7 +477,7 @@ DWORD WINAPI updateTable(LPVOID lpParam)
 	//printf("thread started...");
 	while (personsFound.size() > 0) {
 
-		Sleep(500); //runs every half second
+		Sleep(100); //runs every tenth second
 		printTable(true, 0.0); //prints all the persons in the table
 
 	}
@@ -483,34 +486,12 @@ DWORD WINAPI updateTable(LPVOID lpParam)
 
 void printTable(bool targetFound, double targetUserVal) {
 
-	//need to set cursor position before writing to screen
-	/*if (targetFound == false) {
-		COORD cursorPos = { 2, 1 };
-		SetConsoleCursorPosition(wHnd, cursorPos);
-		printf("TargetUser:    N/A");
-	}
-	else {
-		COORD cursorPos = { 2, 1 };
-		SetConsoleCursorPosition(wHnd, cursorPos);
-		printf("TargetUser:    %.1f", targetUserVal);
-	}*/
-
-	/*if (personsFound.size() == 0) {  //code shouldn't ever run, but makes sense anyway
-		COORD cursorPos = { 2, 1 };
-		SetConsoleCursorPosition(wHnd, cursorPos);
-		printf("TargetUser:    N/A");
-	}*/
-	/*else if (personsFound.size() == 1) {
-		COORD cursorPos = { 2, 1 };
-		SetConsoleCursorPosition(wHnd, cursorPos);
-		printf("targetUser:   %f", personsFound[0]->QueryTracking()->QueryCenterMass().world.point.z);
-	}*/
-	//else { 
+	//need to set cursor position before writing to screen 
 	if (personsFound[0] == NULL) {
-		//target user disappeared, mark that one output table
+		//target user disappeared, mark that on output table
 		COORD cursorPos = { 2, 1 };
 		SetConsoleCursorPosition(wHnd, cursorPos);
-		printf("TargetUser:    N/A");
+		printf("TargetUser:    N/A     ");
 	}
 	else {
 		COORD cursorPos = { 2, 1 };
@@ -522,7 +503,6 @@ void printTable(bool targetFound, double targetUserVal) {
 			printf("person %d:     %.1f", personCount, personsFound[personCount]->QueryTracking()->QueryCenterMass().world.point.z);
 		}
 	}
-	
 }
 
 void ErrorHandler(LPTSTR lpszFunction)

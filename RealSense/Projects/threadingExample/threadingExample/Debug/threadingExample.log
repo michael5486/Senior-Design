@@ -1,12 +1,12 @@
 ﻿  main.cpp
 c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(95): warning C4244: 'argument': conversion from 'double' to 'unsigned int', possible loss of data
-c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(144): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(150): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(165): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(173): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(181): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(189): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(212): warning C4018: '<': signed/unsigned mismatch
-c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(213): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(140): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(146): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(161): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(169): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(177): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(185): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(207): warning C4018: '<': signed/unsigned mismatch
+c:\users\michael\desktop\senior-design\realsense\projects\threadingexample\threadingexample\main.cpp(208): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
   threadingExample.vcxproj -> C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\threadingExample\Debug\threadingExample.exe
   threadingExample.vcxproj -> C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\threadingExample\Debug\threadingExample.pdb (Partial PDB)
