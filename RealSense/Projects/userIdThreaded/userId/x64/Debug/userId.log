@@ -1,0 +1,13 @@
+﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (userId.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  main.cpp
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\myperson.h(354): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\myperson.h(374): warning C4244: 'argument': conversion from 'double' to 'unsigned __int64', possible loss of data
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(419): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(425): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(440): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(448): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(456): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(464): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(520): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+  userId.vcxproj -> C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\userIdThreaded\x64\Debug\userIdThreaded.exe
+  userId.vcxproj -> C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\userIdThreaded\x64\Debug\userIdThreaded.pdb (Partial PDB)
