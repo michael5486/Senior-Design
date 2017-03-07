@@ -2,12 +2,15 @@
   main.cpp
 c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\myperson.h(354): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\myperson.h(374): warning C4244: 'argument': conversion from 'double' to 'unsigned __int64', possible loss of data
-c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(422): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(428): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(443): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(451): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(459): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(467): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(501): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\mybuffer.h(48): warning C4244: '=': conversion from 'double' to 'pxcF32', possible loss of data
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\mybuffer.h(49): warning C4244: '=': conversion from 'double' to 'pxcF32', possible loss of data
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\mybuffer.h(50): warning C4244: '=': conversion from 'double' to 'pxcF32', possible loss of data
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(426): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(432): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(447): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(455): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(463): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(471): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+c:\users\michael\desktop\senior-design\realsense\projects\useridthreaded\userid\main.cpp(505): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
   userId.vcxproj -> C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\userIdThreaded\x64\Debug\userIdThreaded.exe
   userId.vcxproj -> C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\userIdThreaded\x64\Debug\userIdThreaded.pdb (Partial PDB)

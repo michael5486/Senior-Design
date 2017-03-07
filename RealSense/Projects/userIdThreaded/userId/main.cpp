@@ -15,6 +15,7 @@
 #include <assert.h>
 #include "myPerson.h"
 #include "myLogging.h"
+#include "myBuffer.h"
 
 /* Required for ouputting data to file */
 #include <iostream>
@@ -59,6 +60,7 @@ HANDLE threadSuccess; //Handle to control output table thread
 int consoleWidth = 60;
 int consoleHeight = 20;
 vector<PXCPersonTrackingData::Person*> personsFound;
+myBuffer targetUserLocBuff; 
 
 
 
@@ -285,6 +287,7 @@ void initializeTargetUser(PXCPersonTrackingModule* personModule) {
 		isInitialized = true;
 
 		personsFound.push_back(personData); //puts first data into personsFound vector
+		targetUserLocBuff.add(centerMass);
 
 		/* Create thread to write values to the table */
 		DWORD   dwThreadId;
@@ -372,7 +375,8 @@ void updateTargetUser(PXCPersonTrackingModule* personModule) {
 
 		PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
 		myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
-
+		
+		targetUserLocBuff.add(centerMass);
 		targetUser.updatePerson(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid, myCenterMass);
 		//printf("median torsoHeight: %f\n", targetUser.getMedianTorsoHeight());
 		//printf("median leftArmLength: %f\n", targetUser.getMedianLeftArmLength());
@@ -491,7 +495,7 @@ void printTable(bool targetFound, double targetUserVal) {
 		//target user disappeared, mark that on output table
 		COORD cursorPos = { 2, 1 };
 		SetConsoleCursorPosition(wHnd, cursorPos);
-		printf("TargetUser:    N/A     ");
+		printf("TargetUser LKL  "); printLocation(targetUserLocBuff.getLastLocation());
 	}
 	else {
 		COORD cursorPos = { 2, 1 };
