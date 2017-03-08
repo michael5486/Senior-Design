@@ -61,6 +61,9 @@ int consoleWidth = 60;
 int consoleHeight = 20;
 vector<PXCPersonTrackingData::Person*> personsFound;
 myBuffer targetUserLocBuff; 
+int targetUserCurrID = 0;
+int targetUserMissingCount = 0;
+#define MAX_TARGET_MISSING_COUNT 100
 
 
 
@@ -74,6 +77,8 @@ void createOutputTable();
 void printTable(bool, double);
 void ErrorHandler(LPTSTR lpszFunction);
 DWORD WINAPI updateTable(LPVOID);
+boolean containsTargetUser(PXCPersonTrackingModule* personModule);
+boolean isTargetUserGone(PXCPersonTrackingModule* personModule);
 
 
 
@@ -183,6 +188,7 @@ int main(int argc, WCHAR* argv[]) {
 
 					/* Target user already found, disappeared from FOV */
 					if (personsFound.size() > 0) {
+						isTargetUserGone(personModule); //increments personGoneCounter if necessary
 						(personsFound[0]) = NULL;
 					}
 					continue;
@@ -495,7 +501,9 @@ void printTable(bool targetFound, double targetUserVal) {
 		//target user disappeared, mark that on output table
 		COORD cursorPos = { 2, 1 };
 		SetConsoleCursorPosition(wHnd, cursorPos);
-		printf("TargetUser LKL  "); printLocation(targetUserLocBuff.getLastLocation());
+		if (targetUserMissingCount >= MAX_TARGET_MISSING_COUNT) {
+			printf("TargetUser LKL  "); printLocation(targetUserLocBuff.getLastLocation());
+		}
 	}
 	else {
 		COORD cursorPos = { 2, 1 };
@@ -541,4 +549,41 @@ void ErrorHandler(LPTSTR lpszFunction)
 
 	LocalFree(lpMsgBuf);
 	LocalFree(lpDisplayBuf);
+}
+
+/* Determines if targetUser is in the FOV */
+boolean containsTargetUser(PXCPersonTrackingModule* personModule) {
+
+	if (personModule == NULL) { //no users in FOV, therefore return false
+		return false;
+	}
+	int numPersons = personModule->QueryOutput()->QueryNumberOfPeople();
+	for (int i = 0; i < numPersons; i++) {
+
+		PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, i);
+
+		/* Finds the unique ID of each user */
+		int uniqueID = personData->QueryTracking()->QueryId();
+
+		if (uniqueID == targetUserCurrID) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/* Returns true if target user has been absent from FOV for a specified time */
+boolean isTargetUserGone(PXCPersonTrackingModule* personModule) {
+	
+	if (targetUserMissingCount >= 100) { //user has been gone for a while, return true
+		return true;
+	}
+	if (!containsTargetUser(personModule)) { //user is not in the current frame, increment counter
+		targetUserMissingCount++;
+	}
+	else {  //user is in the frame, reset counter
+		targetUserMissingCount = 0;
+	}
+
 }

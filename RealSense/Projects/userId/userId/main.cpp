@@ -40,6 +40,7 @@ myPerson targetUser;
 bool isInitialized = false;
 //vector<int> personList;
 int numPeopleFound = -1;
+int targetUserCurrID = 0;  //target user is always the first user found, aka targetID 0
 
 /* Global variables for logging joint data */
 //char separator = ' ';
@@ -56,6 +57,7 @@ void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople);
 myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* person);
 void updateTargetUser(PXCPersonTrackingModule* personModule);
 boolean isNewUser(PXCPersonTrackingModule *personModule);
+boolean containsTargetUser(PXCPersonTrackingModule* personModule);
 
 
 int main(int argc, WCHAR* argv[]) {
@@ -160,7 +162,10 @@ int main(int argc, WCHAR* argv[]) {
 				int numPeople = personModule->QueryOutput()->QueryNumberOfPeople();
 
 				/* Found a person */
-				if (numPeople != 0) {
+				if (numPeople == 0) {
+					//do nothing, no persons found. Here we want to make a noise and try to find the targetUser
+				}
+				else if (numPeople == 1) {
 
 					/* Initializing target user */
 					if (isInitialized == false) {
@@ -168,25 +173,44 @@ int main(int argc, WCHAR* argv[]) {
 						//printf("Still initializing user...\n");
 
 					}
-					/* Once target user initialized, update the torso height */
+
+					if (containsTargetUser(personModule)) {
+						printf("contains target user...\n");
+					}
 					else {
-						updateTargetUser(personModule);
-						if (isNewUser(personModule)) {
+						printf("contains secondary user \n");
+					}
+
+				}
+
+				else {
+					printf("more than 1 person in FOV\n");
+				}
+					/* Once target user initialized, update the torso height */
+
+
+				
+
+
+				//	else {
+					//	updateTargetUser(personModule);
+
+						//if (isNewUser(personModule)) {
 							/* Comparing people in FOV against target user */
-							comparePeopleInFOV(personModule, numPeople);
-						}
+						//	comparePeopleInFOV(personModule, numPeople);
+						//}
 
 						
 						/* printing information to log files */
 						//printToVectorLog(targetUser.getTorsoVector(),torsoLog);
 						//printToVectorLog(targetUser.getLeftArmVector(),leftArmLog);
 						//printToVectorLog(targetUser.getRightArmVector(),rightArmLog);
-						PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
+					//	PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
 						//printToJointLog(convertPXCPersonToMyPerson(personData));
 
 
-					}
-				}
+					//}
+				//}
 			}
 
 
@@ -359,3 +383,21 @@ boolean isNewUser(PXCPersonTrackingModule *personModule) {
 	return false;
 }
 	
+/* Determines if targetUser is in the FOV */
+boolean containsTargetUser(PXCPersonTrackingModule* personModule) {
+	
+	int numPersons = personModule->QueryOutput()->QueryNumberOfPeople();
+	for (int i = 0; i < numPersons; i++) {
+
+		PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, i);
+		
+		/* Finds the unique ID of each user */
+		int uniqueID = personData->QueryTracking()->QueryId();
+		
+		if (uniqueID == targetUserCurrID) {
+			return true;
+		}
+	}
+
+	return false;
+}
