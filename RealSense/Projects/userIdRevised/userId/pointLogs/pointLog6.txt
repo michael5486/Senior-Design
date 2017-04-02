@@ -1,5 +1,0 @@
-
-Beginning data output...
-
-
-Time           JOINT_HEAD                         JOINT_SHOULDER_LEFT                JOINT_SHOULDER_RIGHT               JOINT_HAND_LEFT                    JOINT_HAND_RIGHT                   JOINT_SPINE_MID                    JOINT_CENTER_MASS                  
