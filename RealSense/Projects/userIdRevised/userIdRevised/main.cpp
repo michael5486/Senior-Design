@@ -30,8 +30,9 @@ using namespace std;
 
 
 #define MAX_INITIALIZE_COUNT 100
-#define ATV_WIDTH 2 //FIGURE OUT ACTUAL VALUE OF ATV WIDTH (ft.)
-#define WHEEL_RADIUS 0.5 //FIGURE OUT ACTUAL VALUE OF WHEEL RADIUS (ft.)
+#define ATV_WIDTH 1.5 //FIGURE OUT ACTUAL VALUE OF ATV WIDTH (ft.)
+#define WHEEL_RADIUS 0.25 //3 inches
+#define NO_UID_THRESHOLD //FIGURE OUT VALUE CORRESPONDING TO 0.244 ft
 int initializeCount = 0;
 
 PXCSession *session = NULL;
@@ -306,7 +307,9 @@ boolean initializeTargetUser(PXCPersonTrackingModule* personModule) {
 
 
 
-/* Iterates across all people in FOV, compares against target user */
+/* Iterates across all people in FOV, compares against target user
+Returns pID of person most likely to be TU given the associated confidence value surpasses
+a set threshold */
 int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int pID) {
 	/*user parameters*/
 	double proximity; 
@@ -316,7 +319,7 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 
 	vector<double> userConf (numPeople,0); //creates vector of confidence values for each person in frame
 	vector<double> userConfMeas(numPeople, 0); //creates vector of confidence values for each person in frame
-	bool measIncluded = TRUE; //if joint information is unavailable, a different method is utilized
+	bool measIncluded = TRUE; //if joint information is unavailable, a different confidence calculation is utilized
 	
 	/* Iterates across all people in FOV */
 	for(int perIter = 0; perIter < numPeople; perIter++) {
@@ -370,13 +373,13 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 
 	/*determine if one of the new people in frame is the TU and return pID*/
 	if (pID == -1) {
-		if (measIncluded) {
+		if (measIncluded) { //no uID param available, only LKL and measurement
 			double confidence = *max_element(userConfMeas.begin(), userConfMeas.end());
-			if (confidence>=NO_UID_THRESHOLD) {
+			if (confidence >= NO_UID_THRESHOLD) {
 				int pID_of_TU = distance(userConfMeas.begin(), max_element(userConfMeas.begin(), userConfMeas.end()));
 			}
 		}
-		else {
+		else { //no uID or measurement params available, only LKL
 			double confidence = *max_element(userConf.begin(), userConf.end());
 			int pID_of_TU = distance(userConf.begin(), max_element(userConf.begin(), userConf.end()));
 		}
