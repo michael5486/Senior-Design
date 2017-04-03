@@ -16,6 +16,7 @@
 #include "myPerson.h"
 //#include "myLogging.h"
 #include "circleBuffer.h"
+#include <vector>
 
 /* Required for ouputting data to file */
 #include <iostream>
@@ -43,7 +44,6 @@ HANDLE ghMutex;
 double frameRate = 30.0; //adjust as needed
 myPerson targetUser;
 int TU_uID = 0; //TU's uID always starts at 0, this value can only change after comparePeopleinFOV
-int TU_pID;
 bool isInitialized = false;
 int numPeopleFound = -1;
 double targetUserTorsoHeight;
@@ -53,13 +53,16 @@ double targetUserShoulderWidth;
 double robVector[2];
 circleBuffer circBuff;
 
+/*pID is the ID of each user in the frame beginning from 0
+uID is a uniquely generated ID*/
+
 /* Method declarations */ 
 boolean initializeTargetUser(PXCPersonTrackingModule* personModule);
-void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople);
+int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int pID); //returns updated pID of TU after comparison
 //myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* person);
-boolean containsTargetUser(PXCPersonTrackingModule* personModule);
-double proximitytoLKL(myPoint currCM);
-void targetUserFound(PXCPersonTrackingModule* personModule);
+int targetUserpID(PXCPersonTrackingModule* personModule); //returns -1 if TU uID not located
+double proximitytoLKL(myPoint currCM); //TODO
+void targetUserFound(PXCPersonTrackingModule* personModule, int pID);
 double* determineControls(myPoint destination);
 double convertFeetToRSU(double feet);
 double convertRSUToFeet(double rsu);
@@ -208,21 +211,28 @@ int main(int argc, WCHAR* argv[]) {
 				/* Found a person */
 
 				if (numPeople == 0) {
+					targetUserNotFound();
 					//CALL targetUserNotFound, SET LKL AS DESTINATION, DETERMINE CONTROLS, MAKE NOISE
 				}
 				else if (numPeople == 1) {
+					int TU_pID = targetUserpID(personModule);
 					printf("numPeople = %d\n", numPeople);
-					if (containsTargetUser(personModule)) {
-						//targetUserFound(personModule);
-						printf("contains target user...   z = %f\n", personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0)->QueryTracking()->QueryCenterMass().world.point.z);
+					if (TU_pID == -1) { //if pID is -1, TU's uID not found
+						int updatedpID = comparePeopleInFOV(personModule, numPeople, TU_pID); //only when threshold is reached
+						targetUserFound(personModule, updatedpID);
+
+						/*if threshold is not reached, TU not found*/
+						targetUserNotFound();
+						
+						//printf("contains secondary user... z = %f\n", personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0)->QueryTracking()->QueryCenterMass().world.point.z);
 					}
 					else {
-						printf("contains secondary user... z = %f\n", personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0)->QueryTracking()->QueryCenterMass().world.point.z);
+						targetUserFound(personModule, TU_pID);
+						printf("contains target user...   z = %f\n", personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0)->QueryTracking()->QueryCenterMass().world.point.z);
 					}
 				}
 				else {
 					printf("numPeople = %d\n", numPeople);
-					printf("more than 1 person in FOV\n");
 					//COMPARE PEOPLE IN FOV
 				}
 			}
@@ -297,41 +307,89 @@ boolean initializeTargetUser(PXCPersonTrackingModule* personModule) {
 
 
 /* Iterates across all people in FOV, compares against target user */
-void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople) {
+int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int pID) {
+	/*user parameters*/
+	double proximity; 
+	double sameuID;
+	double meas;
+	int pID_of_TU=-1;
 
+	vector<double> userConf (numPeople,0); //creates vector of confidence values for each person in frame
+	vector<double> userConfMeas(numPeople, 0); //creates vector of confidence values for each person in frame
+	bool measIncluded = TRUE; //if joint information is unavailable, a different method is utilized
+	
 	/* Iterates across all people in FOV */
-	for (int perIter = 0; perIter < numPeople; perIter++) {
+	for(int perIter = 0; perIter < numPeople; perIter++) {
 
+		/*Access Joint Info*/
 		PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, perIter);
 		assert(personData != NULL);
 		PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
-
 		PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
 		personJoints->QueryJoints(joints);
-
-		PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
-		myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
-
-
+		if (perIter == pID) { sameuID = 100.0; }
+		else { sameuID = 0.0; }
+		
+		/*Include Measurement Stuff if available*/
 		if (isJointInfoValid(joints) == false) {
-			printf("Invalid joint data...no comparison\n");
+			//printf("Invalid joint data...no comparison\n");
+			PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
+			myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
+			measIncluded = FALSE; //invalid joint info for at least one person
+
+			/*LKL Proximity*/
+			proximity = proximitytoLKL(myCenterMass);
 		}
 		else {
-			//myPoint leftHand        (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
-			//myPoint rightHand       (joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
-			myPoint head            (joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
-			myPoint shoulderLeft    (joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
-			myPoint shoulderRight   (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-			myPoint spineMid        (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
-
-
+			myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+			myPoint shoulderLeft(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
+			myPoint shoulderRight(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
+			myPoint spineMid(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+			
+			PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
+			myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
 			myPerson curr = myPerson(head, shoulderLeft, shoulderRight, spineMid, myCenterMass);
-			//curr.printPerson(); //can implement while testing
-			double currConf = compareTorsoRatio(curr, targetUser); //confidence that current person is user
-			printf("%d. Similarity = %.2f\n", perIter, currConf);
 
+			/*LKL Proximity*/
+			proximity = proximitytoLKL(myCenterMass);
+			
+			/*Torso Ratio Comparison*/
+			meas = compareTorsoRatio(curr, targetUser);
+		}
+		if (measIncluded) {
+			double confM = (0.3*proximity + 0.2*meas + 0.5*sameuID); //confidence incorporating joint measurements
+			double conf = (0.4*proximity + 0.6*sameuID); //confidence excluding joints
+			userConfMeas[perIter] = confM;
+			userConf[perIter] = conf; //add confidence values to vector
+		}
+		else {
+			double conf = (0.4*proximity + 0.6*sameuID); //confidence excluding joints
+			userConf[perIter] = conf; //add confidence value to vector
 		}
 	}
+
+	/*determine if one of the new people in frame is the TU and return pID*/
+	if (pID == -1) {
+		if (measIncluded) {
+			double confidence = *max_element(userConfMeas.begin(), userConfMeas.end());
+			if (confidence>=NO_UID_THRESHOLD) {
+				int pID_of_TU = distance(userConfMeas.begin(), max_element(userConfMeas.begin(), userConfMeas.end()));
+			}
+		}
+		else {
+			double confidence = *max_element(userConf.begin(), userConf.end());
+			int pID_of_TU = distance(userConf.begin(), max_element(userConf.begin(), userConf.end()));
+		}
+	}
+	else {
+		if (measIncluded) {
+			int pID_of_TU = distance(userConfMeas.begin(), max_element(userConfMeas.begin(), userConfMeas.end()));
+		}
+		else {
+			int pID_of_TU = distance(userConf.begin(), max_element(userConf.begin(), userConf.end()));
+		}
+	}
+	return pID_of_TU;
 }
 
 /*calculate person's proximity to TU's LKL given person's CM*/
@@ -343,9 +401,9 @@ double proximitytoLKL(myPoint currCM) {
 	return prox2LKL;
 }
 
-void targetUserFound(PXCPersonTrackingModule* personModule) {
+void targetUserFound(PXCPersonTrackingModule* personModule,int pID) {
 	/* Target User has been found, update ULV/LKL and figure out controls */
-	PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, TU_pID);
+	PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, pID);
 	assert(personData != NULL);
 
 	PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
@@ -356,54 +414,60 @@ void targetUserFound(PXCPersonTrackingModule* personModule) {
 	circBuff.updateULV(myCenterMass, robVector);
 }
 
+void targetUserNotFound() {
+	/*Target User has not been found in the frame, set LKL as destination and sound alarm*/
+	myPoint LKL = circBuff.returnLKL();
+	double* controls = determineControls(LKL);
+	//START BEEPING MOTHAFUCKAAAA
+	printf("TU not found\n");
+}
+
 double* determineControls(myPoint destination) { //uses x and z position of destination to determine rotational freq values for left and right motors
 	double x = destination.getImageX()-160;
 	double z = destination.getWorldZ();
 	double theta = atan(z / x);
 	double followingDistance = convertFeetToRSU(5.0);
 	double wheelSeparation = convertFeetToRSU(ATV_WIDTH);
-	double len = sqrt(pow(x,2.0)+pow(z,2.0)) - followingDistance; 
+	double len = sqrt(pow(x,2.0)+pow(z,2.0)) - followingDistance;  //necessary variables for calculation
+
 	//robVector[0] = len*cos(theta);
 	//robVector[1] = len*sin(theta); //incorporate after ATV can actually move
 	robVector[0, 1] = 0; //initially robot does not move
 	double dispR = sqrt(pow(len*sin(theta) - (wheelSeparation/2)*cos(theta), 2) + pow(len*cos(theta) + (wheelSeparation/2)*(sin(theta)+1), 2)); //right motor displacement (rsu)
 	double dispL = sqrt(pow(len*sin(theta) + (wheelSeparation/2)*cos(theta), 2) + pow(len*cos(theta) - (wheelSeparation/2)*(sin(theta)+1), 2)); //left motor displacement (rsu)
 	//FIGURE OUT frameRate
-	double wR = convertRSUToFeet(dispR) * frameRate / WHEEL_RADIUS;
-	double wL = convertRSUToFeet(dispL) * frameRate / WHEEL_RADIUS;
+	double wR = convertRSUToFeet(dispR) * frameRate / WHEEL_RADIUS; //right motor rotational frequency (rad/s)
+	double wL = convertRSUToFeet(dispL) * frameRate / WHEEL_RADIUS; //left motor rotational frequency (rad/s)
 	double controls[2] = { wR,wL };
 	return controls;
 	//BE WARY OF UNITS!!!
 }
 
-double convertFeetToRSU(double feet) {
-	//FIGURE THIS OUT
+/*linear relationship between Feet and RealSense Units*/
+double convertFeetToRSU(double feet) { 
 	double rsu = feet*280 + 183.33;
 	return rsu;
 }
-
 double convertRSUToFeet(double rsu) {
-	//FIGURE THIS OUT
 	double feet = rsu*0.0035 - 0.588;
 	return feet;
 }
 
-/* Determines if targetUser is in the FOV */
-boolean containsTargetUser(PXCPersonTrackingModule* personModule) {
+/* Determines if targetUser is in the FOV and returns pID of TU*/
+int targetUserpID(PXCPersonTrackingModule* personModule) {
 
 	int numPersons = personModule->QueryOutput()->QueryNumberOfPeople();
 	for (int i = 0; i < numPersons; i++) {
 
 		PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, i);
 
-		/* Finds the unique ID of each user */
+		/* Finds the unique ID(uID) of each user */
 		int uniqueID = personData->QueryTracking()->QueryId();
 
 		if (uniqueID == TU_uID) {
-			TU_pID = i;
-			return true;
+			return i;
 		}
 	}
 
-	return false;
+	return -1;
 }
