@@ -32,9 +32,13 @@ using namespace std;
 #define MAX_INITIALIZE_COUNT 100
 #define ATV_WIDTH 1.5 //FIGURE OUT ACTUAL VALUE OF ATV WIDTH (ft.)
 #define WHEEL_RADIUS 0.25 //3 inches
-#define NO_UID_THRESHOLD //FIGURE OUT VALUE CORRESPONDING TO 0.244 ft
-int initializeCount = 0;
 
+#define NO_UID_THRESHOLD //THRESHOLD WITH JUST 0.3*PROXIMITY + 0.2*MEASUREMENTS 
+#define MAX_POSSIBLE_DISPLACEMENT //FIGURE OUT VALUE CORRESPONDING TO 0.244 ft ONLY LKL
+#define ALL_PARAMS_THRESHOLD
+#define NO_MEAS_THRESHOLD //PROX AND UID
+
+int initializeCount = 0;
 PXCSession *session = NULL;
 
 /* Variables needed to compile */
@@ -315,7 +319,7 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 	double proximity; 
 	double sameuID;
 	double meas;
-	int pID_of_TU=-1;
+	int pID_of_TU=-1; //default updated pID of target user, remains -1 if TU not in frame
 
 	vector<double> userConf (numPeople,0); //creates vector of confidence values for each person in frame
 	vector<double> userConfMeas(numPeople, 0); //creates vector of confidence values for each person in frame
@@ -359,6 +363,8 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 			/*Torso Ratio Comparison*/
 			meas = compareTorsoRatio(curr, targetUser);
 		}
+
+		/*Adding Confidence Values to Vectors*/
 		if (measIncluded) {
 			double confM = (0.3*proximity + 0.2*meas + 0.5*sameuID); //confidence incorporating joint measurements
 			double conf = (0.4*proximity + 0.6*sameuID); //confidence excluding joints
@@ -374,22 +380,30 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 	/*determine if one of the new people in frame is the TU and return pID*/
 	if (pID == -1) {
 		if (measIncluded) { //no uID param available, only LKL and measurement
-			double confidence = *max_element(userConfMeas.begin(), userConfMeas.end());
+			double confidence = *max_element(userConfMeas.begin(), userConfMeas.end()); //0.3 prox, 0.2meas
 			if (confidence >= NO_UID_THRESHOLD) {
 				int pID_of_TU = distance(userConfMeas.begin(), max_element(userConfMeas.begin(), userConfMeas.end()));
 			}
 		}
 		else { //no uID or measurement params available, only LKL
-			double confidence = *max_element(userConf.begin(), userConf.end());
-			int pID_of_TU = distance(userConf.begin(), max_element(userConf.begin(), userConf.end()));
+			double confidence = *max_element(userConf.begin(), userConf.end()); //utilize max possible distance traveled for threshold max 0.4
+			if (confidence >= MAX_POSSIBLE_DISPLACEMENT) {
+				int pID_of_TU = distance(userConf.begin(), max_element(userConf.begin(), userConf.end()));
+			}
 		}
 	}
 	else {
 		if (measIncluded) {
-			int pID_of_TU = distance(userConfMeas.begin(), max_element(userConfMeas.begin(), userConfMeas.end()));
+			double confidence = *max_element(userConfMeas.begin(), userConfMeas.end()); //0.3 prox, 0.2meas, 0.5 uID
+			if (confidence >= ALL_PARAMS_THRESHOLD) {
+				int pID_of_TU = distance(userConfMeas.begin(), max_element(userConfMeas.begin(), userConfMeas.end()));
+			}
 		}
 		else {
-			int pID_of_TU = distance(userConf.begin(), max_element(userConf.begin(), userConf.end()));
+			double confidence = *max_element(userConfMeas.begin(), userConfMeas.end()); //0.4 prox, 0.6 uID
+			if (confidence >= NO_MEAS_THRESHOLD) {
+				int pID_of_TU = distance(userConf.begin(), max_element(userConf.begin(), userConf.end()));
+			}
 		}
 	}
 	return pID_of_TU;
@@ -400,7 +414,10 @@ double proximitytoLKL(myPoint currCM) {
 	myPoint LKL = circBuff.returnLKL();
 	double xLKL = LKL.getImageX(), zLKL = LKL.getWorldZ();
 	double xCM = currCM.getImageX(), zCM = currCM.getWorldZ();
-	double prox2LKL = sqrt(pow((xLKL - xCM), 2.0) + pow((zLKL - zCM), 2.0));
+	xCM += robVector[0], zCM += robVector[1];
+	double prox2LKL = sqrt(pow((xLKL - xCM), 2.0) + pow((zLKL - zCM), 2.0)); //returns RSU
+	prox2LKL = convertRSUToFeet(prox2LKL);
+
 	return prox2LKL;
 }
 
