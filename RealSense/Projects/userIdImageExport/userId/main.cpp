@@ -14,24 +14,25 @@
 #include "service/pxcsessionservice.h"
 #include <assert.h>
 #include "myPerson.h"
-#include "myLogging.h"
-#include "myBuffer.h"
+#include "circleBuffer.h"
+#include <Gdiplus.h>
+#include <atlimage.h>
+#include <math.h>
+#pragma comment(lib,"gdiplus.lib")
 
 /* Required for ouputting data to file */
 #include <iostream>
 #include <fstream>
+#include <stdlib.h>
 #include <string>
 #include <iomanip>
-#include <stdlib.h>
 #include <sstream>
-
-/* For threading */
-#include <strsafe.h>
-
 
 using namespace std;
 
-
+/*For initialization*/
+#define MAX_INITIALIZE_COUNT 100
+int initializeCount = 0;
 
 PXCSession *session = NULL;
 
@@ -43,9 +44,12 @@ volatile bool isStopped = false;
 /* Global variables used in target identification */
 myPerson targetUser;
 bool isInitialized = false;
-//int numPeopleFound = -1;
+int numPeopleFound = -1;
+int targetUserCurrID = 0;  //target user is always the first user found, aka targetID 0
+double targetUserTorsoHeight;
+double targetUserShoulderWidth;
 
-/* Global variables for logging joint data */
+/* Global variables for logging joint data
 //char separator = ' ';
 int timeCounter = 0;
 ofstream jointLog;
@@ -53,27 +57,31 @@ ofstream torsoLog;
 ofstream leftArmLog;
 ofstream rightArmLog;
 
-/* Global variables for the table */
+// Global variables for the table
 HANDLE wHnd;    // Handle to write to the console.
 HANDLE rHnd;    // Handle to read from the console.
 HANDLE threadSuccess; //Handle to control output table thread
 int consoleWidth = 60;
 int consoleHeight = 20;
-vector<PXCPersonTrackingData::Person*> personsFound;
-myBuffer targetUserLocBuff; 
+*/
 
+double robVector[2];
+circleBuffer circBuff;
+boolean imgFlag = false; //only want to extract one frame for now
 
 
 /* Method declarations */
-void initializeTargetUser(PXCPersonTrackingModule* personModule);
+boolean initializeTargetUser(PXCPersonTrackingModule* personModule);
 void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople);
 myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* person);
 void updateTargetUser(PXCPersonTrackingModule* personModule);
 boolean isNewUser(PXCPersonTrackingModule *personModule);
-void createOutputTable();
-void printTable(bool, double);
-void ErrorHandler(LPTSTR lpszFunction);
-DWORD WINAPI updateTable(LPVOID);
+boolean isJointInfoValid(PXCPersonTrackingData::PersonJoints::SkeletonPoint *joints);
+double proximitytoLKL(myPoint currCM);
+//void createOutputTable();
+//void printTable(bool, double);
+//void ErrorHandler(LPTSTR lpszFunction);
+//DWORD WINAPI updateTable(LPVOID);
 
 
 
@@ -156,12 +164,49 @@ int main(int argc, WCHAR* argv[]) {
 		//printf("is jointTracking Enabled?: %d\n", skeletonJoints->IsEnabled());
 
 
-
-		/* Creates the formatting and handles for our output table */
-		createOutputTable();
-
 		//printf("Initializing stream...\n");
 		/* Stream Data */
+		
+		while (!isInitialized) {
+			/* Waits until new frame is available and locks it for application processing */
+			sts = pp->AcquireFrame(false);
+
+			/* Render streams */
+			PXCCapture::Sample *sample = pp->QuerySample();
+
+			if (sample) {
+				PXCPersonTrackingModule* personModule = pp->QueryPersonTracking();
+
+				/* If no persons are visible, renders and releases current frame */
+				if (personModule == NULL) {
+					if (sample->depth && !renderd.RenderFrame(sample->depth)) break;
+					if (sample->color && !renderc.RenderFrame(sample->color)) break;
+					pp->ReleaseFrame();
+					continue;
+				}
+
+				int numPeople = personModule->QueryOutput()->QueryNumberOfPeople();
+
+				/* Found a person */
+				if (numPeople == 1) {
+
+					/* When this method is called enough times, it will return true and break initialization loop */
+					if (initializeTargetUser(personModule)) {
+						break;
+					}
+
+				}
+
+				/* Releases lock so pipeline can process next frame */
+				pp->ReleaseFrame();
+
+			}
+		}
+		
+		printf("Target initialized: \n");
+		printf("torsoHeight = %f\n", targetUserTorsoHeight);
+		printf("shoulderWidth = %f\n", targetUserShoulderWidth);
+
 		while (true) {
 			/* Waits until new frame is available and locks it for application processing */
 			sts = pp->AcquireFrame(false);
@@ -174,6 +219,7 @@ int main(int argc, WCHAR* argv[]) {
 				PXCPersonTrackingModule* personModule = pp->QueryPersonTracking();
 
 				/* If no persons are visible, renders and releases current frame */
+				//IF personModule IS NULL, WE SHOULD BE CALLING userNotFound
 				if (personModule == NULL) {
 					if (sample->depth && !renderd.RenderFrame(sample->depth)) break;
 					if (sample->color && !renderc.RenderFrame(sample->color)) break;
@@ -181,10 +227,6 @@ int main(int argc, WCHAR* argv[]) {
 					
 					//printf("no Person");
 
-					/* Target user already found, disappeared from FOV */
-					if (personsFound.size() > 0) {
-						(personsFound[0]) = NULL;
-					}
 					continue;
 				}
 
@@ -192,7 +234,26 @@ int main(int argc, WCHAR* argv[]) {
 
 				/* Found a person */
 				if (numPeople != 0) {
-
+					if (!imgFlag) {
+						PXCImage *colorIm;
+						colorIm = sample->color;
+						PXCImage::ImageData colorData;
+						if (colorIm->AcquireAccess(PXCImage::ACCESS_READ, colorData.format, &colorData) >= PXC_STATUS_NO_ERROR) {
+							PXCImage::ImageInfo colorInfo = colorIm->QueryInfo();
+							auto colorPitch = colorData.pitches[0] / sizeof(pxcBYTE);
+							ofstream frameBuf;
+							frameBuf.open("frame3.jpg");
+							Gdiplus::Bitmap img(colorInfo.width, colorInfo.height, colorInfo.width*3, colorData.format, colorData.planes[0]);
+							CLSID jpgClsid;
+							//CLSIDFromString(L"{557cf401-1a04-11d3-9a73-0000f81ef32e}", &jpgClsid);
+							//Gdiplus::Image image(L"frame1.tif");
+							img.Save(L"frame1.jpg", &jpgClsid);
+							frameBuf.close();
+							printf("wabba wabba wabba... wobbuffet\npitch: %z\ncolor info width times 3: %d\nnumber of bytes in colordata.planes[0]: %z\n", colorPitch,colorInfo.width*3,sizeof(colorData.planes[0]));
+							imgFlag = TRUE;
+							colorIm->ReleaseAccess(&colorData);
+						}
+					}
 					/* Initializing target user */
 					if (isInitialized == false) {
 						initializeTargetUser(personModule);
@@ -238,23 +299,17 @@ int main(int argc, WCHAR* argv[]) {
 
 	// Clean Up
 	pp->Release();
-	jointLog.close();
+	/*jointLog.close();
 	torsoLog.close();
 	leftArmLog.close();
 	rightArmLog.close();
 	CloseHandle(threadSuccess); //closes table output thread
+	*/
 	return 0;
 }
 
-
-
-
-
-
-
-/* We should average our tracked joints over 5 seconds or something, removing outliers (median calculated values),
-initializing shouldn't occur in one frame */
-void initializeTargetUser(PXCPersonTrackingModule* personModule) {
+/* Finds median shoulderDistance and torsoHeight values over a definied number of frames to increase accuracy */
+boolean initializeTargetUser(PXCPersonTrackingModule* personModule) {
 	/* Accesses the only person in camera's FOV, our target user */
 	PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0);
 	assert(personData != NULL);
@@ -265,46 +320,36 @@ void initializeTargetUser(PXCPersonTrackingModule* personModule) {
 	PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
 	personJoints->QueryJoints(joints);
 
-
-	if (isJointInfoValid(joints) == false) {
-		//printf("Invalid jointType data...\n");
-	}
 	/* Joint info is valid, initialize target user */
-	else {
-		printf("Initializing target user...\n");
-		myPoint leftHand      (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
-		myPoint rightHand     (joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
-		myPoint head          (joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
-		myPoint shoulderLeft  (joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
-		myPoint shoulderRight (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-		myPoint spineMid      (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
-		
+	if (isJointInfoValid(joints)) {
+		myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+		myPoint shoulderLeft(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
+		myPoint shoulderRight(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
+		myPoint spineMid(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+
 		PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
 		myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
-		
-		targetUser.changeJoints(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid, myCenterMass);
+
+		/* Calculates torsoHeight and shoulderDistance and adds them to respective vectors to keep track */
+		targetUser.updatePerson(head, shoulderLeft, shoulderRight, spineMid, myCenterMass);
 		//targetUser.printPerson();
-		isInitialized = true;
 
-		personsFound.push_back(personData); //puts first data into personsFound vector
-		targetUserLocBuff.add(centerMass);
+		/* Successful joint reading, increment counter */
+		initializeCount++;
+	}
 
-		/* Create thread to write values to the table */
-		DWORD   dwThreadId;
-		threadSuccess = CreateThread(NULL, 0, updateTable, NULL, 0, &dwThreadId);
-
-		if (threadSuccess == NULL)
-		{
-			ErrorHandler(TEXT("CreateThread"));
-			ExitProcess(3);
-		}
+	if (initializeCount >= MAX_INITIALIZE_COUNT) {
+		targetUserTorsoHeight = targetUser.getMedianTorsoHeight();
+		targetUserShoulderWidth = targetUser.getMedianShoulderDistance();
+		return true;
 	}
 
 	/* Frees up space allocated for joints array, it is not needed anymore */
 	delete[] joints;
+
+	/* Not enough joint readings from target user, return false */
+	return false;
 }
-
-
 
 /* Iterates across all people in FOV, compares against target user */
 void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople) {
@@ -327,24 +372,31 @@ void comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople) {
 			printf("Invalid joint data...no comparison\n");
 		}
 		else {
-			myPoint leftHand        (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
-			myPoint rightHand       (joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
 			myPoint head            (joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
 			myPoint shoulderLeft    (joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
 			myPoint shoulderRight   (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
 			myPoint spineMid        (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
 
 
-			myPerson curr = myPerson(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid, myCenterMass);
+			myPerson curr = myPerson(head, shoulderLeft, shoulderRight, spineMid, myCenterMass);
 			//curr.printPerson(); //can implement while testing
 			double currConf = compareTorsoRatio(curr, targetUser); //confidence that current person is user
-			printf("%d. Similarity = %.2f\n", perIter, currConf);
+			double proximity = proximitytoLKL(curr.getCenterMass);
+			printf("%d. Joint Similarity = %.2f , Proximity to LKL = %.2f\n", perIter, currConf,proximity);
 
 		}
 	}
 }
 
+double proximitytoLKL(myPoint currCM) {
+	myPoint LKL = circBuff.returnLKL();
+	double xLKL = LKL.getImageX, zLKL = LKL.getWorldZ;
+	double xCM = currCM.getImageX, zCM = currCM.getWorldZ;
+	double prox2LKL = sqrt(pow((xLKL - xCM), 2.0) + pow((zLKL - zCM),2.0));
+	return prox2LKL;
+}
 
+/*This function needs to be revamped and transformed into TU Found*/
 void updateTargetUser(PXCPersonTrackingModule* personModule) {
 	//printf("Updating the target user...\n");
 	/* Accesses the only person in camera's FOV, our target user */
@@ -352,37 +404,32 @@ void updateTargetUser(PXCPersonTrackingModule* personModule) {
 	assert(personData != NULL);
 
 
-
-	personsFound[0] = personData;
-
 	/* Queries for skeleton joint data */
 	PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
 
 	PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
 	personJoints->QueryJoints(joints);
-	
+
+	PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
+	myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
+
+	circBuff.updateULV(myCenterMass,robVector);
+
 	if (isJointInfoValid(joints) == false) {
 		//printf("Invalid jointType data...\n");
 	}
 	/* Joint info is valid, initialize target user */
 	else {
-		myPoint leftHand       (joints[0].world.x, joints[0].world.y, joints[0].world.z, joints[0].image.x, joints[0].image.y);
-		myPoint rightHand      (joints[1].world.x, joints[1].world.y, joints[1].world.z, joints[1].image.x, joints[1].image.y);
 		myPoint head           (joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
 		myPoint shoulderLeft   (joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
 		myPoint shoulderRight  (joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
 		myPoint spineMid       (joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
-
-		PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
-		myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
 		
-		targetUserLocBuff.add(centerMass);
-		targetUser.updatePerson(head, shoulderLeft, shoulderRight, leftHand, rightHand, spineMid, myCenterMass);
+		targetUser.updatePerson(head, shoulderLeft, shoulderRight, spineMid, myCenterMass);
 		//printf("median torsoHeight: %f\n", targetUser.getMedianTorsoHeight());
 		//printf("median leftArmLength: %f\n", targetUser.getMedianLeftArmLength());
 		//printf("median rightArmLength: %f\n", targetUser.getMedianRightArmLength());
 	}
-
 
 }
 
@@ -397,41 +444,42 @@ boolean isNewUser(PXCPersonTrackingModule *personModule) {
 
 	for (int i = 0; i < numPersons; i++) {
 		PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, i);
+		int numPersons = personModule->QueryOutput()->QueryNumberOfPeople();
 
 		/* Finds the unique ID of each user */
 		int uniqueID = personData->QueryTracking()->QueryId();
 		//printf("uniqueID = %d numPeople=%d", uniqueID, numPeopleFound);
 
 		/* If assigned ID greater than the size of personFound, person hasn't been seen before */
-		if (uniqueID > personsFound.size()) {
+		if (uniqueID > numPeopleFound) {
 			printf("New user found ID = %d\n", uniqueID);
 			//numPeopleFound++;
 			/* Adding the new personData to our history of persons found */
-			personsFound.push_back(personData);
+			numPeopleFound++;
 			return true;
 		}
 	}
 	return false;
 }
 	
-void createOutputTable() {
-	/* Set up the handles for reading/writing */
+/*void createOutputTable() {
+	// Set up the handles for reading/writing
 	wHnd = GetStdHandle(STD_OUTPUT_HANDLE);
 	rHnd = GetStdHandle(STD_INPUT_HANDLE);
 
-	/* Change the window title */
+	// Change the window title
 	SetConsoleTitle(TEXT("userID"));
 
-	/* Set up the required window size */
+	// Set up the required window size
 	SMALL_RECT windowSize = { 0, 0, consoleHeight - 1, consoleWidth - 1 };
 
-	/* Change the console window size */
+	// Change the console window size
 	SetConsoleWindowInfo(wHnd, TRUE, &windowSize);
 
-	/* Create a COORD to hold the buffer size */
+	// Create a COORD to hold the buffer size
 	COORD bufferSize = { consoleHeight, consoleWidth };
 
-	/* Change the internal buffer size */
+	// Change the internal buffer size
 	SetConsoleScreenBufferSize(wHnd, bufferSize);
 
 	// Set up the character:
@@ -474,9 +522,9 @@ void createOutputTable() {
 	}
 
 }
-
+*/
 /* Parameter is void, can be any data type or no data at all. This function is executed by the thread */
-DWORD WINAPI updateTable(LPVOID lpParam)
+/*DWORD WINAPI updateTable(LPVOID lpParam)
 {
 	//printf("thread started...");
 	while (personsFound.size() > 0) {
@@ -486,9 +534,9 @@ DWORD WINAPI updateTable(LPVOID lpParam)
 
 	}
 	return 0;
-}
+}*/
 
-void printTable(bool targetFound, double targetUserVal) {
+/*void printTable(bool targetFound, double targetUserVal) {
 
 	//need to set cursor position before writing to screen 
 	if (personsFound[0] == NULL) {
@@ -541,4 +589,32 @@ void ErrorHandler(LPTSTR lpszFunction)
 
 	LocalFree(lpMsgBuf);
 	LocalFree(lpDisplayBuf);
+}*/
+
+boolean isJointInfoValid(PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints) {
+	/* Not valid data, return false */
+	if (joints[0].jointType != 6 || joints[1].jointType != 7 || joints[2].jointType != 10 || joints[3].jointType != 19 || joints[4].jointType != 16 || joints[5].jointType != 17) {
+		return false;
+		printf("Garbage data...\n");
+	}
+	/*Hands not crucial for current comparison methodology */
+	if (joints[0].image.x == 0 && joints[0].image.y == 0) { //no image coordinates for left hand, skips initialization
+															//printf("Invalid left hand...\n");
+															//return false;
+	}
+	if (joints[1].image.x == 0 && joints[1].image.y == 0) { //no image coordinates for right hand, skips initialization
+															//printf("Invalid right hand...\n");
+															//return false;
+	}
+	if (joints[3].image.x == 0 && joints[3].image.y == 0) { //no image coordinates for left shoulder, skips initialization
+		printf("Invalid left shoulder...\n");
+		return false;
+	}
+	if (joints[4].image.x == 0 && joints[4].image.y == 0) { //no image coordinates for right shoulder, skips initialization
+		printf("Invalid right shoulder...\n");
+		return false;
+	}
+
+	/* All tested issues passed, joint info is valid */
+	return true;
 }

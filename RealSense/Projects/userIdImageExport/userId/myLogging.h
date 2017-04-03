@@ -6,6 +6,9 @@
 #include <iomanip>
 #include <stdlib.h>
 #include <sstream>
+#include "pxcpersontrackingdata.h"
+#include "myPerson.h"
+#include <assert.h>
 
 #define COUNT_WIDTH 15
 #define COLUMN_WIDTH 35
