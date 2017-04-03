@@ -48,9 +48,9 @@ void circleBuffer::updateULV(myPoint newLoc, double robVector[]) { //add locatio
 	position when user was at lastPos*/
 	myPoint last = locBuffer[lastPos];
 	myPoint curr = locBuffer[currPos];
-	double currx = curr.getImageX(), currz = curr.getWorldZ();
+	double currx = curr.getWorldX(), currz = curr.getWorldZ()*1000;
 	currx += robVector[0];
 	currz += robVector[1];
-	ULV[0] = currx - last.getImageX();
-	ULV[1] = currz - last.getWorldZ();
+	ULV[0] = currx - last.getWorldX();
+	ULV[1] = currz - last.getWorldZ()*1000;
 }
