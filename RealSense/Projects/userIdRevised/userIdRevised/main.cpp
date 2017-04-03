@@ -63,6 +63,7 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 //myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* person);
 int targetUserpID(PXCPersonTrackingModule* personModule); //returns -1 if TU uID not located
 double proximitytoLKL(myPoint currCM); //TODO
+double convertProximityToConfidenceScore(double);
 void targetUserFound(PXCPersonTrackingModule* personModule, int pID);
 double* determineControls(myPoint destination);
 double convertFeetToRSU(double feet);
@@ -402,6 +403,13 @@ double proximitytoLKL(myPoint currCM) {
 	double xCM = currCM.getImageX(), zCM = currCM.getWorldZ();
 	double prox2LKL = sqrt(pow((xLKL - xCM), 2.0) + pow((zLKL - zCM), 2.0));
 	return prox2LKL;
+}
+
+/* Convert person's proximity to TU's LKL into a score from 0 (Low score) to 100 (High score).
+   A higher score indicates that we are more confident selected person is the TU */
+double convertProximityToConfidenceScore(double proximityToLKL) {
+
+
 }
 
 void targetUserFound(PXCPersonTrackingModule* personModule,int pID) {
