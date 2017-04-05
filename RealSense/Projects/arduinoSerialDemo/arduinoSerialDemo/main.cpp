@@ -13,12 +13,19 @@
 Serial* SP = new Serial(ARDUINO_PORT);
 char *toWrite;
 
-/* Global variables for motor control */
+/* Global variables for motor control 
+	Current agreed upon motor configuration:
+
+	0  1  2  3  4  5  6  7  8  9  10  11  12  13  14  15 
+	 <------Reverse     | |   Forward-----> 		 |	
+
 int leftMotor = 0;
 int rightMotor = 0;
 
+
 /* Function declarations */
 void packageMotorControlByte();
+void sendControls();
 void goForward();
 void turnLeft();
 void turnRight();
@@ -29,22 +36,33 @@ void packageMotorControlByte() {
 	toWrite = (char*)(rightMotor + leftMotor << 4);
 }
 
-void goForward() {
+/* Packages and sends the motor controls */
 
 
+
+void goForward() {  //medium speed forward
+	leftMotor = 10;
+	rightMotor = 10; 
 }
 
-void turnLeft() {
+void goBackwards() {
+	leftMotor = 3;
+	rightMotor = 3;
+}
 
-
+void turnLeft() {  //turns left
+	//left motor reverse
+	leftMotor = 3
+	//right motor forward
+	rightMotor = 10;
 }
 
 void turnRight() {
-
-
+	//left motor forward
+	leftMotor = 10;
+	//right motor reverse
+	rightMotor = 3;
 }
-
-
 
 
 int main() {
@@ -68,11 +86,15 @@ int main() {
 		if (SP->WriteData(toWrite, nbChar) == false) { //information unsuccessfully transmitted
 			printf("Error in Arduino communication\n");
 		}
-		else {
-			printf("%u\n", *toWrite);
-		}
+
+		packa
+
+		// else {
+		// 	printf("%u\n", *toWrite);
+		// }
+
 		Sleep(500);
-		(*toWrite)++; //dereferences and increments value at the pointer
+		//(*toWrite)++; //dereferences and increments value at the pointer
 
 	}
 }
