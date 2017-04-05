@@ -16,6 +16,8 @@
 #include "myPerson.h"
 //#include "myLogging.h"
 #include "circleBuffer.h"
+#include "SerialClass.h"
+#include "myArduinoCommunication.h"
 #include <vector>
 
 /* Required for ouputting data to file */
@@ -42,6 +44,9 @@ using namespace std;
 
 #define PROXIMITY_EXP_DECAY 0.288 //Decay variable calculated from average frame rate expected user movement
 
+/* Make sure to check the Arduino port before usage */
+#define ARDUINO_PORT "COM3"
+
 
 /* Definitions for the console */
 #define CONSOLE_WIDTH 60
@@ -66,6 +71,16 @@ int totalPeopleFound = 0;
 double targetUserTorsoHeight;
 double targetUserShoulderWidth;
 
+
+/* Global variable declarations for serial communications to Arduino */
+//Serial* SP = new Serial(ARDUINO_PORT);
+//char *toWrite;
+//boolean success = true; //tracks if info successfully sent
+//int nbChar = 1; //all messages sent is 1 char long
+unsigned int leftMotor = 0;
+unsigned int rightMotor = 0;
+
+
 /*ULV variables*/
 double robVector[2];
 circleBuffer circBuff;
@@ -82,9 +97,10 @@ double proximitytoLKL(myPoint currCM); //TODO
 double convertProximityToConfidenceScore(double);
 void targetUserFound(PXCPersonTrackingModule* personModule, int pID);
 void targetUserNotFound();
-double* determineControls(myPoint destination);
+void determineControls(myPoint destination);
 double convertFeetToRSU(double feet);
 double convertRSUToFeet(double rsu);
+
 
 int main(int argc, WCHAR* argv[]) {
 	
@@ -112,6 +128,16 @@ int main(int argc, WCHAR* argv[]) {
 	}
 	else {
 		printf("OpenCV mode unsuccessful...\n");
+	}
+
+	/* Initializing Arduino serial communication */
+	toWrite = new char[1]; //allocates memory for out character buffer
+	*toWrite = 0; //sets it equal to zero
+
+	if (SP->IsConnected())
+		printf("Connected to %s\n", ARDUINO_PORT);
+	else {
+		printf("Cannot find Arduino, please try again.\n");
 	}
 
 
@@ -251,6 +277,10 @@ int main(int argc, WCHAR* argv[]) {
 						}
 						else {
 							targetUserFound(personModule, updatedpID);
+
+
+
+
 						}
 						//printf("contains secondary user... z = %f\n", personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0)->QueryTracking()->QueryCenterMass().world.point.z);
 					}
@@ -469,15 +499,16 @@ void targetUserFound(PXCPersonTrackingModule* personModule,int pID) {
 	PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
 	myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
 	double* controls = new double[2];
-	controls = determineControls(myCenterMass);
+	determineControls(myCenterMass);
 
 	/* Reset position in console */
 	COORD cursorPos = { 2, 10 };
 	SetConsoleCursorPosition(wHnd, cursorPos);
 	//printf("userID = %d     totalUsersFound = %d\n", TU_uID, totalPeopleFound);
-	printf("  Rotational freq (rot/s)    leftMotor = %.2f Right motor = %.2f\n", controls[1] / (2* 3.14) , controls[0] / (2 * 3.14));
+	printf("leftMotor = %d    rightMotor = %d", leftMotor, rightMotor);
+	//printf("  Rotational freq (rot/s)    leftMotor = %.2f Right motor = %.2f\n", controls[1] / (2* 3.14) , controls[0] / (2 * 3.14));
 	//printf("  Rotational freq (rad/s)    leftMotor = %.2f Right motor = %.2f\n", controls[0], controls[1]);
-	printf("  centerMass (x, z) = (%.2f, %.2f)", centerMass.world.point.x, centerMass.world.point.z);
+	//printf("  centerMass (x, z) = (%.2f, %.2f)", centerMass.world.point.x, centerMass.world.point.z);
 	
 
 	cursorPos = { 2, 15 };
@@ -491,32 +522,29 @@ void targetUserFound(PXCPersonTrackingModule* personModule,int pID) {
 void targetUserNotFound() {
 	/*Target User has not been found in the frame, set LKL as destination and sound alarm*/
 	myPoint LKL = circBuff.returnLKL();
-	double* controls = determineControls(LKL);
+	determineControls(LKL);
 	//START BEEPING MOTHAFUCKAAAA
 	COORD cursorPos = { 2, 15 };
 	SetConsoleCursorPosition(wHnd, cursorPos);
 	printf("TU not found\n");
 }
 
-double* determineControls(myPoint destination) { //uses x and z position of destination to determine rotational freq values for left and right motors
-	double x = destination.getWorldX();
-	double z = destination.getWorldZ()*1000;
-	double theta = atan(z / x) + atan(1)*2; //add pi/2 to theta to place it in proper quadrant 
-	double followingDistance = convertFeetToRSU(5.0);
-	double wheelSeparation = convertFeetToRSU(ATV_WIDTH);
-	double len = sqrt(pow(x,2.0)+pow(z,2.0)) - followingDistance;  //necessary variables for calculation
 
-	//robVector[0] = len*cos(theta);
-	//robVector[1] = len*sin(theta); //incorporate after ATV can actually move
-	robVector[0, 1] = 0; //initially robot does not move
-	double dispR = sqrt(pow(len*sin(theta) - (wheelSeparation/2)*cos(theta), 2) + pow(len*cos(theta) + (wheelSeparation/2)*(sin(theta)+1), 2)); //right motor displacement (rsu)
-	double dispL = sqrt(pow(len*sin(theta) + (wheelSeparation/2)*cos(theta), 2) + pow(len*cos(theta) - (wheelSeparation/2)*(sin(theta)+1), 2)); //left motor displacement (rsu)
-	//FIGURE OUT frameRate
-	double wR = convertRSUToFeet(dispR) * frameRate / WHEEL_RADIUS; //right motor rotational frequency (rad/s)
-	double wL = convertRSUToFeet(dispL) * frameRate / WHEEL_RADIUS; //left motor rotational frequency (rad/s)
-	double controls[2] = { wR,wL };
-	return controls;
-	//BE WARY OF UNITS!!!
+/* Uses x and z distance from TU to determine ATV's directional movement */
+void determineControls(myPoint centerMass) { 
+	int x = centerMass.getImageX();
+	if (x < 120) { //turn left
+		turnLeft();
+		sendControls();
+	}
+	else if (x >= 120 && x <= 200) { //go forward
+		goForward();
+		sendControls();
+	}
+	else { //x > 200...turn right
+		turnRight();
+		sendControls();
+	}
 }
 
 /*linear relationship between Feet and RealSense Units*/

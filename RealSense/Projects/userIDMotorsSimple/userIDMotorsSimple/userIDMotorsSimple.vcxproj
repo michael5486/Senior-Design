@@ -115,11 +115,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="circleBuffer.h" />
+    <ClInclude Include="myArduinoCommunication.h" />
     <ClInclude Include="myPerson.h" />
     <ClInclude Include="myPoint.h" />
+    <ClInclude Include="SerialClass.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Serial.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

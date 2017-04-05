@@ -95,17 +95,6 @@ int main() {
 		printf("Cannot find Arduino, please try again.\n");
 	}
 
-	//unsigned int x = 1;
-	//bitset<8> bitset1{ x };
-	//printf("x = %d\n", x);
-	//x = x << 1;
-	//printf("x = %d\n", x);
-	//x = x << 1;
-	//printf("x = %d\n", x);
-
-
-	
-
 	while (SP->IsConnected()) { //while the Arduino is connected
 	//while(true) {
 		if (_kbhit()) { // Break loop
