@@ -236,6 +236,14 @@ int main(int argc, WCHAR* argv[]) {
 		printf("torsoHeight = %f\n", targetUserTorsoHeight);
 		printf("shoulderWidth = %f\n", targetUserShoulderWidth);
 
+		Sleep(100000);
+
+		//printf("torsoHeight-----------\n");
+		//targetUser.printVector(targetUser.getTorsoVector());
+
+		//printf("shoulderWidth--------\n");
+		//targetUser.printVector(targetUser.getShoulderDistanceVector());
+
 
 
 		/* Stream Data */
@@ -348,6 +356,9 @@ boolean initializeTargetUser(PXCPersonTrackingModule* personModule) {
 		
 		/* Calculates torsoHeight and shoulderDistance and adds them to respective vectors to keep track */
 		targetUser.updatePerson(head, shoulderLeft, shoulderRight, spineMid, myCenterMass);
+
+		printf("torsoHeight         = %.2f\n", targetUser.getTorsoHeight());
+		printf("torsoShoulder Ratio = %.2f\n", targetUser.getTorsoShoulderRatio());
 
 		/* Successful joint reading, increment counter */
 		initializeCount++;
