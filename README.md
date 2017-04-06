@@ -15,14 +15,14 @@ So far I have accomplished:
 * Fixed unreliable world easurements reported from the RealSense SDK
 * Implemented Socket-based networking to debug the robot during operation
 * Utilized 3 data inputs to figure out which person in FOV is the target user:
-** Joints data
-*** Head
-*** Left Shoulder
-*** Right Shoulder
-*** Spine Mid
-*** Center Mass
-** Previous Locations
-** userID
+	*Joint data
+		* Head
+		* Left Shoulder
+		* Right Shoulder
+		* Spine Mid
+		* Center Mass
+	* Previous Locations
+	* userID
 * Finished data packaging and serial transmission to Arduino
 * When target user leaves FOV, the image is divided into regions and we only look for users to compare against target user in those reasons
 
