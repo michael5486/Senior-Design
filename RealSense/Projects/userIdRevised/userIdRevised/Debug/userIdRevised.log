@@ -1,5 +1,6 @@
 ﻿  main.cpp
 c:\users\michael\desktop\senior-design\realsense\projects\useridrevised\useridrevised\myperson.h(309): warning C4244: 'argument': conversion from 'double' to 'unsigned int', possible loss of data
 c:\users\michael\desktop\senior-design\realsense\projects\useridrevised\useridrevised\main.cpp(518): warning C4172: returning address of local variable or temporary: controls
+  LINK : C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\userIdRevised\Debug\userIdRevised.exe not found or not built by the last incremental link; performing full link
   userIdRevised.vcxproj -> C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\userIdRevised\Debug\userIdRevised.exe
   userIdRevised.vcxproj -> C:\Users\Michael\Desktop\Senior-Design\RealSense\Projects\userIdRevised\Debug\userIdRevised.pdb (Partial PDB)
