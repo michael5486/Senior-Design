@@ -6,7 +6,7 @@ ATV will be able to follow a user through various terrain, over obstacles like c
 
 ## Current Progress
 
-Current Work is in Realsense/Projects/UserIdRevised
+`Realsense/Projects/UserIdRevised`
 
 So far I have accomplished:
 * Gathering, processing and outputting joint information
