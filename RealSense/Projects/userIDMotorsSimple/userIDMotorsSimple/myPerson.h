@@ -157,7 +157,6 @@ void myPerson::printPerson() {
 	printf("    shoulderDistance:     %.2f\n", shoulderDistance);
 	printf("    torsoHeight:          %.2f\n", torsoHeight);
 
-
 }
 
 /* We are assumming all joints are on the same z plane. Will need to implement the trig here */

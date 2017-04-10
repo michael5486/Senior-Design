@@ -49,7 +49,7 @@ using namespace std;
 
 
 /* Definitions for the console */
-#define CONSOLE_WIDTH 60
+#define CONSOLE_WIDTH 40
 #define CONSOLE_HEIGHT 20
 HANDLE wHnd;    // Handle to write to the console.
 HANDLE rHnd;    // Handle to read from the console.
@@ -236,16 +236,6 @@ int main(int argc, WCHAR* argv[]) {
 		printf("torsoHeight = %f\n", targetUserTorsoHeight);
 		printf("shoulderWidth = %f\n", targetUserShoulderWidth);
 
-		Sleep(100000);
-
-		//printf("torsoHeight-----------\n");
-		//targetUser.printVector(targetUser.getTorsoVector());
-
-		//printf("shoulderWidth--------\n");
-		//targetUser.printVector(targetUser.getShoulderDistanceVector());
-
-
-
 		/* Stream Data */
 		while (true) {
 			/* Waits until new frame is available and locks it for application processing */
@@ -357,8 +347,8 @@ boolean initializeTargetUser(PXCPersonTrackingModule* personModule) {
 		/* Calculates torsoHeight and shoulderDistance and adds them to respective vectors to keep track */
 		targetUser.updatePerson(head, shoulderLeft, shoulderRight, spineMid, myCenterMass);
 
-		printf("torsoHeight         = %.2f\n", targetUser.getTorsoHeight());
-		printf("torsoShoulder Ratio = %.2f\n", targetUser.getTorsoShoulderRatio());
+		//printf("torsoHeight         = %.2f\n", targetUser.getTorsoHeight());
+		//printf("torsoShoulder Ratio = %.2f\n", targetUser.getTorsoShoulderRatio());
 
 		/* Successful joint reading, increment counter */
 		initializeCount++;
@@ -515,14 +505,17 @@ void targetUserFound(PXCPersonTrackingModule* personModule,int pID) {
 	/* Reset position in console */
 	COORD cursorPos = { 2, 10 };
 	SetConsoleCursorPosition(wHnd, cursorPos);
-	//printf("userID = %d     totalUsersFound = %d\n", TU_uID, totalPeopleFound);
+	printf("                                     ");
+	//printf("userID = %d     totalUsersFound = %d\n", TU_uID, totalPeopleFound);	
+	cursorPos = { 2, 10 };
+	SetConsoleCursorPosition(wHnd, cursorPos);
 	printf("leftMotor = %d    rightMotor = %d", leftMotor, rightMotor);
 	//printf("  Rotational freq (rot/s)    leftMotor = %.2f Right motor = %.2f\n", controls[1] / (2* 3.14) , controls[0] / (2 * 3.14));
 	//printf("  Rotational freq (rad/s)    leftMotor = %.2f Right motor = %.2f\n", controls[0], controls[1]);
 	//printf("  centerMass (x, z) = (%.2f, %.2f)", centerMass.world.point.x, centerMass.world.point.z);
 	
-
-	cursorPos = { 2, 15 };
+	/* Clears TU not found text */
+	cursorPos = { 2, 25 };
 	SetConsoleCursorPosition(wHnd, cursorPos);
 	printf("                ");
 
@@ -535,7 +528,33 @@ void targetUserNotFound() {
 	myPoint LKL = circBuff.returnLKL();
 	determineControls(LKL);
 	//START BEEPING MOTHAFUCKAAAA
-	COORD cursorPos = { 2, 15 };
+
+	/* Clears out old text*/
+	COORD cursorPos = { 0, 13 };
+	SetConsoleCursorPosition(wHnd, cursorPos);
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+
+	/* Draws a question mark on the screen */
+	cursorPos = { 0, 13 };
+	SetConsoleCursorPosition(wHnd, cursorPos);
+	printf("\n\n");
+	printf("   #####\n");
+	printf("  ##   ###\n");
+	printf("        ###\n");
+	printf("       ###\n");
+	printf("     ## \n");
+	printf("\n");
+	printf("     ##");
+
+	cursorPos = { 2, 25 };
 	SetConsoleCursorPosition(wHnd, cursorPos);
 	printf("TU not found\n");
 }
@@ -544,17 +563,78 @@ void targetUserNotFound() {
 /* Uses x and z distance from TU to determine ATV's directional movement */
 void determineControls(myPoint centerMass) { 
 	int x = centerMass.getImageX();
-	if (x < 120) { //turn left
+	
+	/* Clears out old text*/
+	COORD newCoord = { 0, 13 };
+	SetConsoleCursorPosition(wHnd, newCoord);
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+	printf("                                            \n");
+
+
+
+
+	newCoord = { 0, 13 };
+	SetConsoleCursorPosition(wHnd, newCoord);
+
+	double z = convertRSUToFeet(centerMass.getWorldZ() * 1000);
+	if (z < 5) {  //user is closer than 5 feet, stop motors, quit function
+		stopMoving();
+		sendControls();
+		printf("user too close, stop moving\n\n");
+		printf("XXX       XXX\n");
+		printf(" XXX     XXX\n");
+		printf("  XXX   XXX\n");
+		printf("    XXXXX\n");
+		printf("  XXX   XXX\n");
+		printf(" XXX     XXX\n");
+		printf("XXX       XXX\n");
+		return;
+	}
+	else if (x < 120) { //turn left
 		turnLeft();
 		sendControls();
+		printf("turning left...\n\n");
+		printf("      ##\n");
+		printf("    ##\n");
+		printf("  ##\n");
+		printf("###############\n");
+		printf("  ##\n");
+		printf("    ##\n");
+		printf("      ##\n");
+
 	}
 	else if (x >= 120 && x <= 200) { //go forward
 		goForward();
 		sendControls();
+		printf("going forward...\n\n");
+		printf("      ##\n");
+		printf("    ######\n");
+		printf("  ##  ##  ##\n");
+		printf("##    ##    ##\n");
+		printf("      ##\n");
+		printf("      ##\n");
+		printf("      ##\n");
+
 	}
 	else { //x > 200...turn right
 		turnRight();
 		sendControls();
+		printf("turning right...\n\n");
+		printf("    ##\n");
+		printf("      ##\n");
+		printf("        ##\n");
+		printf("############\n");
+		printf("        ##\n");
+		printf("     ##\n");
+		printf("   ##\n");
+
 	}
 }
 

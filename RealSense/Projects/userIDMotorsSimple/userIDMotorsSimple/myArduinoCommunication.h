@@ -39,13 +39,15 @@ void goForward();
 void turnLeft();
 void turnRight();
 void stopMoving();
+//double getLeftMotorControl();
+//double getRightMotorControl();
 
 
 /* Converts leftMotor and rightMotor control variables into one byte to send to Arduino */
 /* When you print out as int, they become signed and obtain negative values...doesn't matter still same binary representation*/
 void packageMotorControlByte() {
 	unsigned int temp = leftMotor << 4;
-	printf("leftMotor = %d  rightMotor = %d\n", leftMotor, rightMotor);
+	//printf("leftMotor = %d  rightMotor = %d\n", leftMotor, rightMotor);
 	*toWrite = rightMotor + temp;
 }
 
@@ -87,3 +89,11 @@ void stopMoving() {
 	//right motor stop
 	rightMotor = 7;
 }
+
+/* double getRightMotorControl() {
+	return rightMotor;
+} 
+
+double getLeftMotorControl() {
+	return leftMotor;
+} */
