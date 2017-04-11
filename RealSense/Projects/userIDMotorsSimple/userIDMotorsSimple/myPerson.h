@@ -23,7 +23,6 @@ boolean isJointInfoValid(PXCPersonTrackingData::PersonJoints::SkeletonPoint*);
 
 
 
-
 /* Needed for logging purposes */
 char separator = ' ';
 #define VECTOR_WIDTH 6
@@ -102,10 +101,13 @@ class myPerson{
 		myPoint getSpineMid() { return JOINT_SPINE_MID; }
 		myPoint getCenterMass() { return JOINT_CENTER_MASS; }
 
+		void printVector(vector<double>);
 		vector<double> getTorsoVector() { return torsoHeightVector; }
 		vector<double> getShoulderDistanceVector() { return shoulderVector; }
 		double getMedianTorsoHeight();
 		double getMedianShoulderDistance();
+		double getTorsoHeight();
+		double getTorsoShoulderRatio();
 };
 
 /* Changes the joints for a person and the respective distance calculations */
@@ -154,7 +156,6 @@ void myPerson::printPerson() {
 	printf("  Calculated Features:\n");
 	printf("    shoulderDistance:     %.2f\n", shoulderDistance);
 	printf("    torsoHeight:          %.2f\n", torsoHeight);
-
 
 }
 
@@ -369,6 +370,29 @@ boolean isJointInfoValid(PXCPersonTrackingData::PersonJoints::SkeletonPoint* joi
 	}
 	/* All tested issues passed, joint info is valid */
 	return true;
+}
+
+/* Sorts and prints the entire vector to stdout */
+void myPerson::printVector(vector<double> vect) {
+	sort(vect.begin(), vect.end());
+	for (vector<double>::iterator it = vect.begin(); it != vect.end(); it++) {
+		printf("%f\n", *it);
+	}
+}
+ 
+/* Calculates and returns the torso Height */
+double myPerson::getTorsoHeight() {
+	//double medianZ = findMedianForZ(JOINT_HEAD, JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT, JOINT_SPINE_MID, JOINT_CENTER_MASS);
+	//return calculateDistance(JOINT_HEAD, JOINT_SPINE_MID, medianZ);
+	return torsoHeight;
+}
+
+/* Calculates and returns the torsoHeight/shoulderHeight ratio */
+double myPerson::getTorsoShoulderRatio() {
+	//double medianZ = findMedianForZ(JOINT_HEAD, JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT, JOINT_SPINE_MID, JOINT_CENTER_MASS);
+	
+	//double shoulderWidth = calculateDistance(JOINT_SHOULDER_LEFT, JOINT_SHOULDER_RIGHT);
+	return torsoHeight / shoulderDistance;
 }
 
 /* Prints the entire vector onto one line in the vector log file 
