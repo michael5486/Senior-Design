@@ -1,13 +1,13 @@
-int leftForwardLEDPin = 10;       // LED connected to digital pin 9
-int leftBackwardLEDPin = 9;    // LED connected to digital pin 10
-int rightForwardLEDPin = 6;     // LED connected to digital pin 5
-int rightBackwardLEDPin = 5;    // LED connected to digital pin 6
+int leftA1 = 9;// int leftForwardLEDPin = 10;       // LED connected to digital pin 9
+int leftA2 = 10;//int leftBackwardLEDPin = 9;    // LED connected to digital pin 10
+int rightA1 = 5;//int rightForwardLEDPin = 6;     // LED connected to digital pin 5
+int rightA2 = 6;//int rightBackwardLEDPin = 5;    // LED connected to digital pin 6
 
 
 int incomingByte = 0;
 
-int leftLEDCommand = 0;
-int rightLEDCommand = 0;
+int leftCommand = 0;
+int rightCommand = 0;
 
 void parseByte(int);
 void controlLEDs();
@@ -51,8 +51,8 @@ void parseByte(int byte) {
   //binary AND to get bits for rightMotor;
   int tempRight = byte & rightMask;
 
-  leftLEDCommand = tempLeft;
-  rightLEDCommand = tempRight;
+  leftCommand = tempLeft;
+  rightCommand = tempRight;
 }
 
 //parses leftLEDCommand and rightLEDCommand to send forward/reverse to each LED
@@ -60,104 +60,131 @@ void parseByte(int byte) {
 void controlLEDs() {
 
     //clears input to each pin
-    analogWrite(leftForwardLEDPin, 0);
-    analogWrite(leftBackwardLEDPin, 0);
-    analogWrite(rightForwardLEDPin, 0);
-    analogWrite(rightBackwardLEDPin, 0);
+    analogWrite(leftA1, 0);
+    analogWrite(leftA2, 0);
+    analogWrite(rightA1, 0);
+    analogWrite(rightA2, 0);
+    
 
-  switch(leftLEDCommand) {
-    case 0:
-      analogWrite(leftBackwardLEDPin, 252);
+  switch(leftCommand) {
+    case 0: // Left Wheel Backward Full -- Needs to go CW
+      analogWrite(leftA1, 255);
+      analogWrite(leftA2, 255);
     break;
-    case 1:
-      analogWrite(leftBackwardLEDPin, 216);
+    case 1: 
+      analogWrite(leftA1, 225);
+      analogWrite(leftA2, 225);
     break;
     case 2:
-      analogWrite(leftBackwardLEDPin, 180);
+      analogWrite(leftA1, 195);
+      analogWrite(leftA2, 195);
     break;
     case 3:
-      analogWrite(leftBackwardLEDPin, 144);
+      analogWrite(leftA1, 165);
+      analogWrite(leftA2, 165);
     break;
     case 4:
-      analogWrite(leftBackwardLEDPin, 108);
+      analogWrite(leftA1, 135);
+      analogWrite(leftA2, 135);
     break;
     case 5:
-      analogWrite(leftBackwardLEDPin, 72);
+      analogWrite(leftA1, 105);
+      analogWrite(leftA2, 105);
     break;
-    case 6:
-      analogWrite(leftBackwardLEDPin, 36);
+    case 6: // Left Backward 0
+      analogWrite(leftA1, 0);
+      analogWrite(leftA2, 0);
     break;
-    //case 7:
+    //case 7: NOTHING
       //analogWrite(leftBackwardLEDPin, 0);
     //break;
-    case 8:
-      analogWrite(leftForwardLEDPin, 36);
+    case 8: // Left Wheel Forward 0 -- Needs to go CCW
+      analogWrite(leftA1, 0);
+      analogWrite(leftA2, 0);
     break;
     case 9:
-      analogWrite(leftForwardLEDPin, 72);
+      analogWrite(leftA1, 105);
+      analogWrite(leftA2, 255);
     break;
     case 10:
-      analogWrite(leftForwardLEDPin, 108);
+      analogWrite(leftA1, 135);
+      analogWrite(leftA2, 255);
     break;
     case 11:
-      analogWrite(leftForwardLEDPin, 144);
+      analogWrite(leftA1, 165);
+      analogWrite(leftA2, 255);
     break;
     case 12:
-      analogWrite(leftForwardLEDPin, 180);
+      analogWrite(leftA1, 195);
+      analogWrite(leftA2, 255);
     break;
     case 13:
-      analogWrite(leftForwardLEDPin, 216);
+      analogWrite(leftA1, 225);
+      analogWrite(leftA2, 255);
     break;
-    case 14:
-      analogWrite(leftForwardLEDPin, 252);
+    case 14: // Left Forward Full
+      analogWrite(leftA1, 255);
+      analogWrite(leftA2, 255);
     break;
   }
 
-    switch(rightLEDCommand) {
-    case 0:
-      analogWrite(rightBackwardLEDPin, 252);
+    switch(rightCommand) { // Right Wheel Set
+    case 0: // Right Wheel Backward Full -- Needs to go CCW
+      analogWrite(rightA1, 255);
+      analogWrite(rightA2, 255);
     break;
     case 1:
-      analogWrite(rightBackwardLEDPin, 216);
+      analogWrite(rightA1, 225);
+      analogWrite(rightA2, 255);
     break;
     case 2:
-      analogWrite(rightBackwardLEDPin, 180);
+      analogWrite(rightA1, 195);
+      analogWrite(rightA2, 255);
     break;
     case 3:
-      analogWrite(rightBackwardLEDPin, 144);
+      analogWrite(rightA1, 165);
+      analogWrite(rightA2, 255);
     break;
     case 4:
-      analogWrite(rightBackwardLEDPin, 108);
+      analogWrite(rightA1, 135);
+      analogWrite(rightA2, 255);
     break;
     case 5:
-      analogWrite(rightBackwardLEDPin, 72);
+      analogWrite(rightA1, 105);
+      analogWrite(rightA2, 255);
     break;
-    case 6:
-      analogWrite(rightBackwardLEDPin, 36);
+    case 6: // Right Backward 0
+      analogWrite(rightA1, 0);
+      analogWrite(rightA2, 0);
     break;
-    //case 7:
+    //case 7: NOTHING
       //analogWrite(rightBackwardLEDPin, 0);
     //break;
-    case 8:
-      analogWrite(rightForwardLEDPin, 36);
+    case 8: // Right Wheel Forward 0 -- Needs to go CW
+      analogWrite(rightA1, 0);
+      analogWrite(rightA2, 0);
     break;
     case 9:
-      analogWrite(rightForwardLEDPin, 72);
+      analogWrite(rightA1, 105);
+      analogWrite(rightA2, 105);
     break;
     case 10:
-      analogWrite(rightForwardLEDPin, 108);
+      analogWrite(rightA1, 135);
+      analogWrite(rightA2, 135);
     break;
     case 11:
-      analogWrite(rightForwardLEDPin, 144);
+      analogWrite(rightA1, 165);
+      analogWrite(rightA2, 165);
     break;
     case 12:
-      analogWrite(rightForwardLEDPin, 180);
-    break;
+      analogWrite(rightA1, 195);
+      analogWrite(rightA2, 195);
     case 13:
-      analogWrite(rightForwardLEDPin, 216);
-    break;
-    case 14:
-      analogWrite(rightForwardLEDPin, 252);
+      analogWrite(rightA1, 225);
+      analogWrite(rightA2, 225);
+    case 14: // Right Forward Full
+      analogWrite(rightA1, 255);
+      analogWrite(rightA2, 255);
     break;
   }
 }  
