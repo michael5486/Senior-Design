@@ -245,11 +245,15 @@ int main(int argc, WCHAR* argv[]) {
 					//CALL targetUserNotFound, SET LKL AS DESTINATION, DETERMINE CONTROLS, MAKE NOISE
 				}
 				else if (numPeople == 1) {
+
 					/* Check if user with TU's uID is in frame, return pID */
 					int TU_pID = targetUserpID(personModule);
+
 					//printf("numPeople = %d\n", numPeople);
 					if (TU_pID == -1) { //if pID is -1, TU's uID not found
+
 						int updatedpID = comparePeopleInFOV(personModule, numPeople, TU_pID); //only when threshold is reached
+						
 						if (updatedpID == -1) {
 							targetUserNotFound();
 						}
@@ -396,6 +400,8 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 			/* get data/uID of person in frame */
 			PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, perIter);
 			assert(personData != NULL);
+
+			/* Fills trackuID with uniqueID of each person in frame */
 			trackuID[perIter] = personData->QueryTracking()->QueryId();
 
 			/* region of person in frame */
@@ -416,6 +422,8 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 				myPoint spineMid(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
 
 				myPerson curr = myPerson(head, shoulderLeft, shoulderRight, spineMid, myCenterMass);
+				
+				/* Compares each person in FOV against target user, places confidence value in conf vector */
 				double measRangeConfidence = jointDataConfidence(curr, targetUser);
 				conf[perIter] = measRangeConfidence;
 			}
@@ -438,6 +446,8 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 			TU_uID = trackuID[pID_of_TU];
 		}
 	}
+
+	/* possible make this a second method and get rid of pID as a parameter? */
 	else {
 
 		vector<double> userConf(numPeople, 0); //creates vector of confidence values for each person in frame
@@ -452,6 +462,9 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 			PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
 			PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
 			personJoints->QueryJoints(joints);
+
+			/* Is this right? perIter is with respect to the frame, pID is with respect to the entire program */
+
 			if (perIter == pID) { sameuID = 100.0; }
 			else { sameuID = 0.0; }
 
@@ -502,6 +515,8 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 				int pID_of_TU = distance(userConfMeas.begin(), max_element(userConfMeas.begin(), userConfMeas.end()));
 			}
 		}
+
+		/* Shouldn't it find the max in userConf? not userConfMeas? */
 		else {
 			confidence = *max_element(userConfMeas.begin(), userConfMeas.end()); //0.4 prox, 0.6 uID
 			if (confidence >= NO_MEAS_THRESHOLD) {
@@ -520,6 +535,9 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 	std::printf("pID of TU = %d\n", pID_of_TU);
 	std::printf("Confidence Value = %f\n", confidence);
 
+
+
+	/* Your scope for pID_of_TU is all fucked up. This return statement never sees what you do in line 515 or 523 */
 	return pID_of_TU;
 }
 		/*
