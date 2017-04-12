@@ -63,8 +63,8 @@ double frameRate = 30.0; //adjust as needed
 myPerson targetUser;
 int TU_uID = 0; //TU's uID always starts at 0, this value can only change after comparePeopleinFOV
 bool isInitialized = false;
-int numPeopleFound = -1;   //make this non global
-int totalPeopleFound = 0;
+//int numPeopleFound = -1;   //make this non global
+//int totalPeopleFound = 0;
 double targetUserTorsoHeight;
 double targetUserShoulderWidth;
 
@@ -77,9 +77,11 @@ uID is a uniquely generated ID*/
 
 /* Method declarations */ 
 boolean initializeTargetUser(PXCPersonTrackingModule* personModule);
-int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int pID); //returns updated pID of TU after comparison
+boolean isPersonTU(PXCPersonTrackingModule* personModule);
+int isTUAmongPeopleinFrame(PXCPersonTrackingModule* personModule, int numPeople); //returns updated pID of TU after comparison (TU_uID not found)
+int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int pID); //returns updated pID of TU after comparison (TU_uID found)
 //myPerson convertPXCPersonToMyPerson(PXCPersonTrackingData::Person* person);
-int targetUserpID(PXCPersonTrackingModule* personModule); //returns -1 if TU uID not located
+int targetUserpID(PXCPersonTrackingModule* personModule, int numPeople); //returns -1 if TU uID not located
 double proximitytoLKL(myPoint currCM); //TODO
 double convertProximityToConfidenceScore(double);
 double jointDataConfidence(myPerson, myPerson);
@@ -213,7 +215,8 @@ int main(int argc, WCHAR* argv[]) {
 		std::printf("torsoHeight = %f\n", targetUserTorsoHeight);
 		std::printf("shoulderWidth = %f\n", targetUserShoulderWidth);
 
-
+		/* Initialize numPeople */
+		int numPeople = 0;
 
 		/* Stream Data */
 		while (true) {
@@ -236,43 +239,50 @@ int main(int argc, WCHAR* argv[]) {
 					continue;
 				}
 
-				int numPeople = personModule->QueryOutput()->QueryNumberOfPeople();
+				numPeople = personModule->QueryOutput()->QueryNumberOfPeople();
+				COORD cursorPos = { 2, 25 };
+				SetConsoleCursorPosition(wHnd, cursorPos);
+				std::printf("numPeople: %d", numPeople);
 
-				/* Found a person */
-
+				/* No people in frame */
 				if (numPeople == 0) {
 					targetUserNotFound();
 					//CALL targetUserNotFound, SET LKL AS DESTINATION, DETERMINE CONTROLS, MAKE NOISE
 				}
+
+				/* One person in frame */
 				else if (numPeople == 1) {
-
 					/* Check if user with TU's uID is in frame, return pID */
-					int TU_pID = targetUserpID(personModule);
+					int TU_pID = targetUserpID(personModule,numPeople);
 
-					//printf("numPeople = %d\n", numPeople);
-					if (TU_pID == -1) { //if pID is -1, TU's uID not found
-
-						int updatedpID = comparePeopleInFOV(personModule, numPeople, TU_pID); //only when threshold is reached
-						
-						if (updatedpID == -1) {
-							targetUserNotFound();
-						}
-						else {
-							targetUserFound(personModule, updatedpID); //comparePeopleInFOV found the TU
-						}
-						//printf("contains secondary user... z = %f\n", personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0)->QueryTracking()->QueryCenterMass().world.point.z);
+					/* If TU's uID not found*/
+					if (TU_pID == -1) {
+						if (isPersonTU(personModule)) { targetUserFound(personModule, 0); } //the person in the frame is TU (only person in frame so pID is 0)	
+						else { targetUserNotFound(); }
 					}
-					else { //assume if only one person in frame and targetUserpID shows that uID is maintained, TU is person in frame
+
+					/* Assume if only one person in frame and targetUserpID shows that uID is maintained, TU is person in frame */
+					else {
 						targetUserFound(personModule, TU_pID);
-						//printf("contains target user...   z = %f\n", personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0)->QueryTracking()->QueryCenterMass().world.point.z);
 					}
 				}
+
 				/*Multiple persons in frame*/
 				else {
-					std::printf("numPeople = %d\n", numPeople);
-					int TU_pID = targetUserpID(personModule);
-					std::printf("numPeople = %d\n", numPeople);
-					int updatedpID = comparePeopleInFOV(personModule, numPeople, TU_pID); //pID updates only when threshold is reached
+					int updatedpID;
+					/* Check if user with TU's uID is in frame, return pID */
+					int TU_pID = targetUserpID(personModule,numPeople);
+
+					/* If TU uID not found among people in frame */
+					if (TU_pID == -1) {
+						updatedpID = isTUAmongPeopleinFrame(personModule, numPeople);
+					}
+					/* If one of the people in the frame has the TU's uID */
+					else {
+						updatedpID = comparePeopleInFOV(personModule, numPeople, TU_pID);
+					}
+					
+					/* Decide if TU has been found */
 					if (updatedpID == -1) {
 						targetUserNotFound();
 					}
@@ -350,20 +360,19 @@ boolean initializeTargetUser(PXCPersonTrackingModule* personModule) {
 }
 
 /* Determines if targetUser is in the FOV and returns pID of TU*/
-int targetUserpID(PXCPersonTrackingModule* personModule) {
+int targetUserpID(PXCPersonTrackingModule* personModule, int numPeople) {
 
-	int numPersons = personModule->QueryOutput()->QueryNumberOfPeople();
-	for (int i = 0; i < numPersons; i++) {
+	for (int i = 0; i < numPeople; i++) {
 
 		PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, i);
 
 		/* Finds the unique ID(uID) of each user */
 		int uniqueID = personData->QueryTracking()->QueryId();
 
-		/* Tracks how many people found during program operation */
+		/* Tracks how many people found during program operation
 		if (uniqueID > totalPeopleFound) {
 			totalPeopleFound++;
-		}
+		} */
 
 		/* Returns the pID of TU */
 		if (uniqueID == TU_uID) {
@@ -373,6 +382,148 @@ int targetUserpID(PXCPersonTrackingModule* personModule) {
 
 	return -1;
 }
+
+/* If only one person in frame and uID doesn't match, check if person is TU */
+boolean isPersonTU(PXCPersonTrackingModule* personModule) {
+	double conf;
+
+	/* region of LKL */
+	myPoint LKL = circBuff.returnLKL();
+	int LKLRegion = circBuff.regionReturn(LKL);
+
+	/* get data/uID of person in frame */
+	PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, 0); //asume pID of person in frame is 0
+	assert(personData != NULL);
+
+	/* region of person in frame */
+	PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
+	myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
+	int perRegion = circBuff.regionReturn(myCenterMass); //method is stored within circBuff
+
+	/* Joints */
+	PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
+	PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
+	personJoints->QueryJoints(joints);
+
+	/* Compute confidence */
+	if ((LKLRegion == perRegion) && isJointInfoValid(joints) == TRUE) {
+		myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+		myPoint shoulderLeft(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
+		myPoint shoulderRight(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
+		myPoint spineMid(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+
+		myPerson curr = myPerson(head, shoulderLeft, shoulderRight, spineMid, myCenterMass);
+
+		/* Compares each person in FOV against target user, places confidence value in conf vector */
+		conf = jointDataConfidence(curr, targetUser);
+	}
+	else {
+		conf = 0.0; //cannot reinitialize without joint data and matching regions with LKL
+	}
+	
+	/* Debugging */
+	COORD cursorPos = { 2, 12 };
+	SetConsoleCursorPosition(wHnd, cursorPos);
+	std::printf("                       \n");
+	std::printf("              \n");
+	std::printf("                                        \n");
+
+	cursorPos = { 2, 20 };
+	SetConsoleCursorPosition(wHnd, cursorPos);
+	std::printf("                            \n");
+	std::printf("                                          \n");
+	std::printf("                              \n");
+
+	cursorPos = { 2, 15 };
+	SetConsoleCursorPosition(wHnd, cursorPos);
+	std::printf("Is Person TU?, conf: %f\n",conf);
+	std::printf("LKL region: %d, Person region: %d\n", LKLRegion, perRegion);
+
+	Sleep(1000);
+	
+	if (conf > 57.7) {
+		TU_uID = personData->QueryTracking()->QueryId();
+		return true;
+	}
+	return false;
+}
+
+/* More than one person in frame, TU uID not among them */
+int isTUAmongPeopleinFrame(PXCPersonTrackingModule* personModule, int numPeople) {
+	
+	vector<double> conf(numPeople, 0); //creates vector of confidence values for each person in frame
+	vector<int> trackuID(numPeople, 0); //track uIDs of all persons in frame to eventually update TU_uID
+	int pID_of_TU = -1; //updated pID of target user (remains -1 if TU not in frame)
+	bool measIncluded = true;
+	double confidence = 0.0;
+
+	/* region of LKL */
+	myPoint LKL = circBuff.returnLKL();
+	int LKLRegion = circBuff.regionReturn(LKL);
+
+	/*If TUu_ID not found in frame*/
+	for (int perIter = 0; perIter < numPeople; perIter++) {
+		measIncluded = true;
+
+		/* get data/uID of person in frame */
+		PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, perIter);
+		assert(personData != NULL);
+
+		/* Fills trackuID with uniqueID of each person in frame */
+		trackuID[perIter] = personData->QueryTracking()->QueryId();
+
+		/* region of person in frame */
+		PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
+		myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
+		int perRegion = circBuff.regionReturn(myCenterMass); //method is stored within circBuff
+
+		 /* Joints */
+		PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
+		PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
+		personJoints->QueryJoints(joints);
+
+		/* Compute confidence */
+		if ((LKLRegion == perRegion) && isJointInfoValid(joints) == TRUE) {
+			myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+			myPoint shoulderLeft(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
+			myPoint shoulderRight(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
+			myPoint spineMid(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+
+			myPerson curr = myPerson(head, shoulderLeft, shoulderRight, spineMid, myCenterMass);
+
+			/* Compares each person in FOV against target user, places confidence value in conf vector */
+			double measRangeConfidence = jointDataConfidence(curr, targetUser);
+			conf[perIter] = measRangeConfidence;
+		}
+		else {
+			conf[perIter] = 0; //cannot reinitialize without joint data
+			measIncluded = false;
+		}
+	}
+
+	confidence = *max_element(conf.begin(), conf.end());
+
+	COORD cursorPos = { 2, 20 };
+	SetConsoleCursorPosition(wHnd, cursorPos);
+	std::printf("Is TU among people in frame?\n");
+	std::printf("LKLRegion: %d\n", LKLRegion);
+	std::printf("isJointInfoValid = %s\n", measIncluded ? "true" : "false");
+
+	cursorPos = { 2, 12 };
+	SetConsoleCursorPosition(wHnd, cursorPos);
+	std::printf("                       \n");
+	std::printf("              \n");
+	std::printf("                                      \n");
+
+	/* If confidence exceeds soft threshold of 100/root(3), update pID and uID of TU */
+	if (confidence>57.7) {
+		pID_of_TU = distance(conf.begin(), max_element(conf.begin(), conf.end()));
+		TU_uID = trackuID[pID_of_TU];
+	}
+	
+	return pID_of_TU;
+}
+
 
 /* Iterates across all people in FOV, compares against target user
 Returns pID of person most likely to be TU given the associated confidence value surpasses
@@ -389,139 +540,81 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 	bool measIncluded = true;
 	double confidence = 0.0;
 
-	/*If TUu_ID not found in frame*/
-	if (pID == -1) {
-		for (int perIter = 0; perIter < numPeople; perIter++) {
-			measIncluded = true;
-			/* region of LKL */
-			myPoint LKL = circBuff.returnLKL();
-			int LKLRegion = circBuff.regionReturn(LKL);
 
-			/* get data/uID of person in frame */
-			PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, perIter);
-			assert(personData != NULL);
+	vector<double> userConf(numPeople, 0); //creates vector of confidence values for each person in frame
+	vector<double> userConfMeas(numPeople, 0); //creates vector of confidence values for each person in frame
 
-			/* Fills trackuID with uniqueID of each person in frame */
-			trackuID[perIter] = personData->QueryTracking()->QueryId();
+	/* Iterates across all people in FOV */
+	for (int perIter = 0; perIter < numPeople; perIter++) {
 
-			/* region of person in frame */
+		/*Access Joint Info*/
+		PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, perIter);
+		assert(personData != NULL);
+		PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
+		PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
+		personJoints->QueryJoints(joints);
+
+		/* Fills trackuID with uniqueID of each person in frame */
+		trackuID[perIter] = personData->QueryTracking()->QueryId();
+
+		if (perIter == pID) { sameuID = 100.0; }
+		else { sameuID = 0.0; }
+
+		/*Include Measurement Stuff if available*/
+		if (isJointInfoValid(joints) == false) {
+			//printf("Invalid joint data...no comparison\n");
 			PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
 			myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
-			int perRegion = circBuff.regionReturn(myCenterMass); //method is stored within circBuff
+			measIncluded = FALSE; //invalid joint info for at least one person
 
-			/* Joints */
-			PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
-			PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
-			personJoints->QueryJoints(joints);
+			/*LKL Proximity*/
+			proximity = proximitytoLKL(myCenterMass);
+		}
+		else {
+			myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
+			myPoint shoulderLeft(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
+			myPoint shoulderRight(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
+			myPoint spineMid(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
 
-			/* Compute confidence */
-			if ((abs(LKLRegion - perRegion) < 1) && isJointInfoValid(joints) == TRUE) {
-				myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
-				myPoint shoulderLeft(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
-				myPoint shoulderRight(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-				myPoint spineMid(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
+			PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
+			myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
+			myPerson curr = myPerson(head, shoulderLeft, shoulderRight, spineMid, myCenterMass);
 
-				myPerson curr = myPerson(head, shoulderLeft, shoulderRight, spineMid, myCenterMass);
-				
-				/* Compares each person in FOV against target user, places confidence value in conf vector */
-				double measRangeConfidence = jointDataConfidence(curr, targetUser);
-				conf[perIter] = measRangeConfidence;
-			}
-			else {
-				conf[perIter] = 0; //cannot reinitialize without joint data
-				measIncluded = false;
-			}
+			/* LKL Proximity */
+			proximity = proximitytoLKL(myCenterMass);
 
-			COORD cursorPos = { 2, 20 };
-			SetConsoleCursorPosition(wHnd, cursorPos);
-			std::printf("PerIter: %d, LKLRegion: %d, perRegion = %d\n", perIter, LKLRegion, perRegion);
-			std::printf("isJointInfoValid = %s\n", measIncluded ? "true" : "false");
+			/* Torso Ratio Comparison */
+			meas = jointDataConfidence(curr, targetUser);
 		}
 
-		confidence = *max_element(conf.begin(), conf.end());
-		//pID_of_TU = distance(conf.begin(), max_element(conf.begin(), conf.end()));
-		/* If confidence exceeds soft threshold of 100/root(3), update pID and uID of TU */
-		if (confidence>57.7) {
-			pID_of_TU = distance(conf.begin(), max_element(conf.begin(), conf.end()));
+		/*Adding Confidence Values to Vectors*/
+		if (measIncluded) {
+			double confM = (0.3*proximity + 0.2*meas + 0.5*sameuID); //confidence incorporating joint measurements
+			double conf = (0.4*proximity + 0.6*sameuID); //confidence excluding joints
+			userConfMeas[perIter] = confM;
+			userConf[perIter] = conf; //add confidence values to vector
+		}
+		else {
+			double conf = (0.4*proximity + 0.6*sameuID); //confidence excluding joints
+			userConf[perIter] = conf; //add confidence value to vector
+		}
+	}
+
+	/* Thresholding Confidence Values*/
+	if (measIncluded) {
+		confidence = *max_element(userConfMeas.begin(), userConfMeas.end()); //0.3 prox, 0.2meas, 0.5 uID
+		if (confidence >= ALL_PARAMS_THRESHOLD) {
+			pID_of_TU = distance(userConfMeas.begin(), max_element(userConfMeas.begin(), userConfMeas.end()));
 			TU_uID = trackuID[pID_of_TU];
 		}
 	}
 
-	/* possible make this a second method and get rid of pID as a parameter? */
+	/* Shouldn't it find the max in userConf? not userConfMeas? */
 	else {
-
-		vector<double> userConf(numPeople, 0); //creates vector of confidence values for each person in frame
-		vector<double> userConfMeas(numPeople, 0); //creates vector of confidence values for each person in frame
-
-		/* Iterates across all people in FOV */
-		for (int perIter = 0; perIter < numPeople; perIter++) {
-
-			/*Access Joint Info*/
-			PXCPersonTrackingData::Person* personData = personModule->QueryOutput()->QueryPersonData(PXCPersonTrackingData::ACCESS_ORDER_BY_ID, perIter);
-			assert(personData != NULL);
-			PXCPersonTrackingData::PersonJoints* personJoints = personData->QuerySkeletonJoints();
-			PXCPersonTrackingData::PersonJoints::SkeletonPoint* joints = new PXCPersonTrackingData::PersonJoints::SkeletonPoint[personJoints->QueryNumJoints()];
-			personJoints->QueryJoints(joints);
-
-			/* Is this right? perIter is with respect to the frame, pID is with respect to the entire program */
-
-			if (perIter == pID) { sameuID = 100.0; }
-			else { sameuID = 0.0; }
-
-			/*Include Measurement Stuff if available*/
-			if (isJointInfoValid(joints) == false) {
-				//printf("Invalid joint data...no comparison\n");
-				PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
-				myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
-				measIncluded = FALSE; //invalid joint info for at least one person
-
-				/*LKL Proximity*/
-				proximity = proximitytoLKL(myCenterMass);
-			}
-			else {
-				myPoint head(joints[2].world.x, joints[2].world.y, joints[2].world.z, joints[2].image.x, joints[2].image.y);
-				myPoint shoulderLeft(joints[4].world.x, joints[4].world.y, joints[4].world.z, joints[4].image.x, joints[4].image.y);
-				myPoint shoulderRight(joints[5].world.x, joints[5].world.y, joints[5].world.z, joints[5].image.x, joints[5].image.y);
-				myPoint spineMid(joints[3].world.x, joints[3].world.y, joints[3].world.z, joints[3].image.x, joints[3].image.y);
-
-				PXCPersonTrackingData::PersonTracking::PointCombined centerMass = personData->QueryTracking()->QueryCenterMass();
-				myPoint myCenterMass(centerMass.world.point.x, centerMass.world.point.y, centerMass.world.point.z, centerMass.image.point.x, centerMass.image.point.y);
-				myPerson curr = myPerson(head, shoulderLeft, shoulderRight, spineMid, myCenterMass);
-
-				/* LKL Proximity */
-				proximity = proximitytoLKL(myCenterMass);
-
-				/* Torso Ratio Comparison */
-				meas = jointDataConfidence(curr, targetUser);
-			}
-
-			/*Adding Confidence Values to Vectors*/
-			if (measIncluded) {
-				double confM = (0.3*proximity + 0.2*meas + 0.5*sameuID); //confidence incorporating joint measurements
-				double conf = (0.4*proximity + 0.6*sameuID); //confidence excluding joints
-				userConfMeas[perIter] = confM;
-				userConf[perIter] = conf; //add confidence values to vector
-			}
-			else {
-				double conf = (0.4*proximity + 0.6*sameuID); //confidence excluding joints
-				userConf[perIter] = conf; //add confidence value to vector
-			}
-		}
-
-		/* Thresholding Confidence Values*/
-		if (measIncluded) {
-			confidence = *max_element(userConfMeas.begin(), userConfMeas.end()); //0.3 prox, 0.2meas, 0.5 uID
-			if (confidence >= ALL_PARAMS_THRESHOLD) {
-				int pID_of_TU = distance(userConfMeas.begin(), max_element(userConfMeas.begin(), userConfMeas.end()));
-			}
-		}
-
-		/* Shouldn't it find the max in userConf? not userConfMeas? */
-		else {
-			confidence = *max_element(userConfMeas.begin(), userConfMeas.end()); //0.4 prox, 0.6 uID
-			if (confidence >= NO_MEAS_THRESHOLD) {
-				int pID_of_TU = distance(userConf.begin(), max_element(userConf.begin(), userConf.end()));
-			}
+		confidence = *max_element(userConf.begin(), userConf.end()); //0.4 prox, 0.6 uID
+		if (confidence >= NO_MEAS_THRESHOLD) {
+			pID_of_TU = distance(userConf.begin(), max_element(userConf.begin(), userConf.end()));
+			TU_uID = trackuID[pID_of_TU];
 		}
 	}
 
@@ -529,15 +622,19 @@ int comparePeopleInFOV(PXCPersonTrackingModule* personModule, int numPeople, int
 	//COORD cursorPos = { 2, 10 };
 	//SetConsoleCursorPosition(wHnd, cursorPos);
 
-	/* Printing out debuggng info */
-	COORD cursorPos = { 2, 13 };
+	/* Printing out debugging info */
+	COORD cursorPos = { 2, 12 };
 	SetConsoleCursorPosition(wHnd, cursorPos);
+	std::printf("Comparing People in FOV\n");
 	std::printf("pID of TU = %d\n", pID_of_TU);
 	std::printf("Confidence Value = %f\n", confidence);
 
+	cursorPos = { 2, 20 };
+	SetConsoleCursorPosition(wHnd, cursorPos);
+	std::printf("                            \n");
+	std::printf("                                          \n");
+	std::printf("                              \n");
 
-
-	/* Your scope for pID_of_TU is all fucked up. This return statement never sees what you do in line 515 or 523 */
 	return pID_of_TU;
 }
 		/*
