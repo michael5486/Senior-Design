@@ -1,63 +1,66 @@
-int leftA1 = 9;// int leftForwardLEDPin = 10;       // LED connected to digital pin 9
-int leftA2 = 10;//int leftBackwardLEDPin = 9;    // LED connected to digital pin 10
-int rightA1 = 5;//int rightForwardLEDPin = 6;     // LED connected to digital pin 5
-int rightA2 = 6;//int rightBackwardLEDPin = 5;    // LED connected to digital pin 6
+/*Takes an input from the nunchuk and sends a control byte to the motors*/
+#include <Wire.h>
+#include <ArduinoNunchuk.h>
 
-
-int incomingByte = 0;
+ArduinoNunchuk nunchuk = ArduinoNunchuk();
 
 int leftCommand = 0;
 int rightCommand = 0;
 
-void parseByte(int);
-void controlLEDs();
+int leftA1 = 9;
+int leftA2 = 10;
+int rightA1 = 5;
+int rightA2 = 6;
+
+
+/* Function declarations */
+void setMotorCommands(int, int);
+void controlMotors();
+
 
 void setup() {
   Serial.begin(9600);
+  nunchuk.init();
+  Serial.print("nunchuk initialized");
 }
 
 void loop() {
-//Output to LEDs when data is received
-  if (Serial.available() > 0) {
-    incomingByte = Serial.read();
-    parseByte(incomingByte);
-    controlLEDs();
+  nunchuk.update();
+  if (nunchuk.analogX < 50) {
+    Serial.print("going left\n");
+    setMotorCommands(10, 3);
+    controlMotors();
   }
-
-//  for (int i = 0; i <= 255; i++) {
-//    parseByte(i);
-//    Serial.println(i);
-//    Serial.print("leftLEDCommand ");
-//    Serial.print(leftLEDCommand);
-//    Serial.print("rightLEDCommand");
-//    Serial.print(rightLEDCommand);
-//    Serial.print("\n");
-//    
-//    delay(250);
-//    controlLEDs();
-//    
-//  }
+  else if (nunchuk.analogX > 200) {
+    Serial.print("going right\n");
+    setMotorCommands(3, 10);
+    controlMotors();
+  }
+  else if (nunchuk.analogY > 200) {
+    Serial.print("going forward\n");
+    setMotorCommands(10, 10);
+    controlMotors();
+  }
+  else if (nunchuk.analogY < 50) {
+    Serial.print("going backward\n");
+    setMotorCommands(10, 10);
+    controlMotors();
+  }
+  else {
+    Serial.print("stop moving\n");
+    setMotorCommands(7 ,7);
+    controlMotors();
+  }
 }
 
-//takes a byte of input, parses it, and sets leftLEDPin and rightLEDpint accordingly
-void parseByte(int byte) {  
-  //binary mask 11110000
-  int leftMask = 0b11110000;
-  //binary mask 00001111
-  int rightMask = 0b00001111;
 
-  //binary AND to get bits for leftMotor
-  int tempLeft = (byte & leftMask) >> 4;
-  //binary AND to get bits for rightMotor;
-  int tempRight = byte & rightMask;
-
-  leftCommand = tempLeft;
-  rightCommand = tempRight;
+void setMotorCommands(int left, int right) {
+  leftCommand = left;
+  rightCommand = right;
 }
 
-//parses leftLEDCommand and rightLEDCommand to send forward/reverse to each LED
-//two LEDs for each motor, for forward and reverse
-void controlLEDs() {
+//parses leftCommand and rightCommand to send forward/reverse to each motor set
+void controlMotors() {
 
     //clears input to each pin
     analogWrite(leftA1, 255);
