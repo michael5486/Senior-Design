@@ -7,8 +7,8 @@ ArduinoNunchuk nunchuk = ArduinoNunchuk();
 int leftCommand = 0;
 int rightCommand = 0;
 
-int leftA1 = 9;
-int leftA2 = 10;
+int leftA1 = 3;
+int leftA2 = 4;
 int rightA1 = 5;
 int rightA2 = 6;
 
@@ -28,22 +28,22 @@ void loop() {
   nunchuk.update();
   if (nunchuk.analogX < 50) {
     Serial.print("going left\n");
-    setMotorCommands(10, 3);
+    setMotorCommands(0, 14);
     controlMotors();
   }
   else if (nunchuk.analogX > 200) {
     Serial.print("going right\n");
-    setMotorCommands(3, 10);
+    setMotorCommands(14, 0);
     controlMotors();
   }
   else if (nunchuk.analogY > 200) {
     Serial.print("going forward\n");
-    setMotorCommands(10, 10);
+    setMotorCommands(14, 14);
     controlMotors();
   }
   else if (nunchuk.analogY < 50) {
     Serial.print("going backward\n");
-    setMotorCommands(10, 10);
+    setMotorCommands(0, 0);
     controlMotors();
   }
   else {
