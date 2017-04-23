@@ -1,4 +1,0 @@
-﻿camera_viewer.obj : error LNK2019: unresolved external symbol "public: __thiscall PersonTrackingRenderer2D::PersonTrackingRenderer2D(struct HWND__ *)" (??0PersonTrackingRenderer2D@@QAE@PAUHWND__@@@Z) referenced in function _wmain
-camera_viewer.obj : error LNK2019: unresolved external symbol "public: __thiscall PersonTrackingRenderer3D::PersonTrackingRenderer3D(struct HWND__ *,class PXCSession *)" (??0PersonTrackingRenderer3D@@QAE@PAUHWND__@@PAVPXCSession@@@Z) referenced in function _wmain
-camera_viewer.obj : error LNK2019: unresolved external symbol "public: __thiscall PersonTrackingRendererManager::PersonTrackingRendererManager(class PersonTrackingRenderer2D *,class PersonTrackingRenderer3D *)" (??0PersonTrackingRendererManager@@QAE@PAVPersonTrackingRenderer2D@@PAVPersonTrackingRenderer3D@@@Z) referenced in function _wmain
-bin/Win32/personTrackingFromScratch_d.exe : fatal error LNK1120: 3 unresolved externals
