@@ -10,7 +10,7 @@ int leftCommand = 0;
 int rightCommand = 0;
 
 void parseByte(int);
-void controlLEDs();
+void controlMotors();
 
 void setup() {
   Serial.begin(9600);
@@ -21,23 +21,8 @@ void loop() {
   if (Serial.available() > 0) {
     incomingByte = Serial.read();
     parseByte(incomingByte);
-    controlLEDs();
+    controlMotors();
   }
-
-//  for (int i = 0; i <= 255; i++) {
-//    parseByte(i);
-//    Serial.println(i);
-//    Serial.print("leftLEDCommand ");
-//    Serial.print(leftLEDCommand);
-//    Serial.print("rightLEDCommand");
-//    Serial.print(rightLEDCommand);
-//    Serial.print("\n");
-//    
-//    delay(250);
-//    controlLEDs();
-//    
-//  }
-}
 
 //takes a byte of input, parses it, and sets leftLEDPin and rightLEDpint accordingly
 void parseByte(int byte) {  
@@ -57,7 +42,7 @@ void parseByte(int byte) {
 
 //parses leftLEDCommand and rightLEDCommand to send forward/reverse to each LED
 //two LEDs for each motor, for forward and reverse
-void controlLEDs() {
+void controlMotors() {
 
     //clears input to each pin
     analogWrite(leftA1, 255);
