@@ -1,5 +1,5 @@
-int leftA1 = 9;// int leftForwardLEDPin = 10;       // LED connected to digital pin 9
-int leftA2 = 10;//int leftBackwardLEDPin = 9;    // LED connected to digital pin 10
+int leftA1 = 3;// int leftForwardLEDPin = 10;       // LED connected to digital pin 9
+int leftA2 = 4;//int leftBackwardLEDPin = 9;    // LED connected to digital pin 10
 int rightA1 = 5;//int rightForwardLEDPin = 6;     // LED connected to digital pin 5
 int rightA2 = 6;//int rightBackwardLEDPin = 5;    // LED connected to digital pin 6
 
@@ -9,7 +9,7 @@ int incomingByte = 0;
 int leftCommand = 0;
 int rightCommand = 0;
 
-void parseByte(int);
+void parseByte(byte);
 void controlMotors();
 
 void setup() {
@@ -25,17 +25,19 @@ void loop() {
   }
 }
 
+}
+
 //takes a byte of input, parses it, and sets leftLEDPin and rightLEDpint accordingly
-void parseByte(int byte) {  
+void parseByte(byte val) {  
   //binary mask 11110000
   int leftMask = 0b11110000;
   //binary mask 00001111
   int rightMask = 0b00001111;
 
   //binary AND to get bits for leftMotor
-  int tempLeft = (byte & leftMask) >> 4;
+  int tempLeft = (val & leftMask) >> 4;
   //binary AND to get bits for rightMotor;
-  int tempRight = byte & rightMask;
+  int tempRight = val & rightMask;
 
   leftCommand = tempLeft;
   rightCommand = tempRight;

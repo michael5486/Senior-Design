@@ -3,7 +3,7 @@
 int leftLEDCommand = 0;
 int rightLEDCommand = 0;
 
-void parseByte(int);
+void parseByte(char);
 void printLEDCommands();
 void packageMotorControlByte(int, int);
 
@@ -38,7 +38,7 @@ void packageMotorControlByte(int left, int right) {
 }
 
 
-void parseByte(int byte) {	
+void parseByte(char byte) {	
 	//binary mask 11110000
 	int leftMask = 0b11110000;
 	//binary mask 00001111
