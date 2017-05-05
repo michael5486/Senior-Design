@@ -45,7 +45,7 @@ using namespace std;
 #define PROXIMITY_EXP_DECAY 0.288 //Decay variable calculated from average frame rate expected user movement
 
 /* Make sure to check the Arduino port before usage */
-#define ARDUINO_PORT "COM3"
+#define ARDUINO_PORT "COM5"
 
 
 /* Definitions for the console */
@@ -77,8 +77,8 @@ double targetUserShoulderWidth;
 //char *toWrite;
 //boolean success = true; //tracks if info successfully sent
 //int nbChar = 1; //all messages sent is 1 char long
-unsigned int leftMotor = 0;
-unsigned int rightMotor = 0;
+//unsigned int leftMotor = 0;
+//unsigned int rightMotor = 0;
 
 
 /*ULV variables*/
@@ -509,7 +509,7 @@ void targetUserFound(PXCPersonTrackingModule* personModule,int pID) {
 	//printf("userID = %d     totalUsersFound = %d\n", TU_uID, totalPeopleFound);	
 	cursorPos = { 2, 10 };
 	SetConsoleCursorPosition(wHnd, cursorPos);
-	printf("leftMotor = %d    rightMotor = %d", leftMotor, rightMotor);
+	printf("leftMotor = %d    rightMotor = %d", getLeftMotorControl(), getRightMotorControl());
 	//printf("  Rotational freq (rot/s)    leftMotor = %.2f Right motor = %.2f\n", controls[1] / (2* 3.14) , controls[0] / (2 * 3.14));
 	//printf("  Rotational freq (rad/s)    leftMotor = %.2f Right motor = %.2f\n", controls[0], controls[1]);
 	//printf("  centerMass (x, z) = (%.2f, %.2f)", centerMass.world.point.x, centerMass.world.point.z);
@@ -528,6 +528,8 @@ void targetUserNotFound() {
 	myPoint LKL = circBuff.returnLKL();
 	determineControls(LKL);
 	//START BEEPING MOTHAFUCKAAAA
+	stopMoving();
+	sendControls();
 
 	/* Clears out old text*/
 	COORD cursorPos = { 0, 13 };

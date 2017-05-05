@@ -15,7 +15,7 @@ an Arduino and converted into motor movements to followthe target user */
 
 
 /* Make sure to check the Arduino port before usage */
-#define ARDUINO_PORT "COM3"
+#define ARDUINO_PORT "COM5"
 
 /* Global variable declarations for serial communications to Arduino */
 Serial* SP = new Serial(ARDUINO_PORT);
@@ -29,8 +29,11 @@ int nbChar = 1; //all messages sent is 1 char long
 		0  1  2  3  4  5  6  7  8  9  10  11  12  13  14  15
 		v<------Reverse     | |   Forward-----> 		 |	*/
 
-extern unsigned int leftMotor;  //defined externally in main
-extern unsigned int rightMotor;  //defined externally in main
+//extern unsigned int leftMotor;  //defined externally in main
+//extern unsigned int rightMotor;  //defined externally in main
+unsigned int leftMotor = 7;
+unsigned int rightMotor = 7;
+
 
 /* Function declarations */
 void packageMotorControlByte();
@@ -90,10 +93,10 @@ void stopMoving() {
 	rightMotor = 7;
 }
 
-/* double getRightMotorControl() {
+ double getRightMotorControl() {
 	return rightMotor;
 } 
 
 double getLeftMotorControl() {
 	return leftMotor;
-} */
+}
