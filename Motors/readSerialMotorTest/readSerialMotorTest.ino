@@ -1,5 +1,5 @@
-int leftA1 = 9;// int leftForwardLEDPin = 10;       // LED connected to digital pin 9
-int leftA2 = 10;//int leftBackwardLEDPin = 9;    // LED connected to digital pin 10
+int leftA1 = 3;// int leftForwardLEDPin = 10;       // LED connected to digital pin 9
+int leftA2 = 4;//int leftBackwardLEDPin = 9;    // LED connected to digital pin 10
 int rightA1 = 5;//int rightForwardLEDPin = 6;     // LED connected to digital pin 5
 int rightA2 = 6;//int rightBackwardLEDPin = 5;    // LED connected to digital pin 6
 
@@ -23,6 +23,8 @@ void loop() {
     parseByte(incomingByte);
     controlMotors();
   }
+
+}
 
 //takes a byte of input, parses it, and sets leftLEDPin and rightLEDpint accordingly
 void parseByte(int byte) {  
