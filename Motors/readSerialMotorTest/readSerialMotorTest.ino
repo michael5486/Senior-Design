@@ -9,7 +9,7 @@ int incomingByte = 0;
 int leftCommand = 0;
 int rightCommand = 0;
 
-void parseByte(int);
+void parseByte(byte);
 void controlMotors();
 
 void setup() {
@@ -27,16 +27,16 @@ void loop() {
 }
 
 //takes a byte of input, parses it, and sets leftLEDPin and rightLEDpint accordingly
-void parseByte(int byte) {  
+void parseByte(byte val) {  
   //binary mask 11110000
   int leftMask = 0b11110000;
   //binary mask 00001111
   int rightMask = 0b00001111;
 
   //binary AND to get bits for leftMotor
-  int tempLeft = (byte & leftMask) >> 4;
+  int tempLeft = (val & leftMask) >> 4;
   //binary AND to get bits for rightMotor;
-  int tempRight = byte & rightMask;
+  int tempRight = val & rightMask;
 
   leftCommand = tempLeft;
   rightCommand = tempRight;
