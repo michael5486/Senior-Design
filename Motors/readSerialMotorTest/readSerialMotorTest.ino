@@ -23,6 +23,7 @@ void loop() {
     parseByte(incomingByte);
     controlMotors();
   }
+}
 
 }
 
@@ -146,8 +147,8 @@ void controlMotors() {
     break;
     case 7: 
       //analogWrite(rightBackwardLEDPin, 0);
-      analogWrite(rightA1, 255);
-      analogWrite(rightA2, 255);
+      //analogWrite(rightA1, 255);
+      //analogWrite(rightA2, 255);
     break;
     case 8: // Right Wheel Forward 0 -- Needs to go CCW
       analogWrite(rightA1, 180);
